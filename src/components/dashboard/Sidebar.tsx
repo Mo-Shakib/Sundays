@@ -52,6 +52,18 @@ const Sidebar: React.FC<SidebarProps> = ({
     onAddProject(newProject);
   };
 
+  const handleMenuItemClick = (itemName: string) => {
+    onViewChange(itemName);
+    // Close sidebar on mobile when menu item is clicked
+    setSidebarOpen(false);
+  };
+
+  const handleProjectSelect = (projectId: number | null) => {
+    onProjectSelect(projectId);
+    // Close sidebar on mobile when project is selected
+    setSidebarOpen(false);
+  };
+
   // Filter active and archived projects
   const activeProjects = projects.filter(project => !project.archived);
   const archivedProjects = projects.filter(project => project.archived);
@@ -89,7 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             {menuItems.map((item) => (
               <button
                 key={item.name}
-                onClick={() => onViewChange(item.name)}
+                onClick={() => handleMenuItemClick(item.name)}
                 className={`group flex items-center w-full px-3 py-3 text-sm font-medium rounded-lg transition-colors ${
                   activeView === item.name
                     ? 'bg-blue-50 text-blue-700'
@@ -113,7 +125,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="space-y-2">
               {/* All Projects option - at the top */}
               <button
-                onClick={() => onProjectSelect(null)}
+                onClick={() => handleProjectSelect(null)}
                 className={`group flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   selectedProjectId === null
                     ? 'bg-blue-50 text-blue-700'
@@ -127,7 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               {activeProjects.map((project) => (
                 <button
                   key={project.name}
-                  onClick={() => onProjectSelect(project.id)}
+                  onClick={() => handleProjectSelect(project.id)}
                   className={`group flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     selectedProjectId === project.id
                       ? 'bg-blue-50 text-blue-700'
@@ -159,7 +171,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {archivedProjects.map((project) => (
                     <div key={project.id} className="group relative">
                       <button
-                        onClick={() => onProjectSelect(project.id)}
+                        onClick={() => handleProjectSelect(project.id)}
                         className={`group flex items-center w-full px-3 py-2 text-sm font-medium rounded-lg transition-colors opacity-60 ${
                           selectedProjectId === project.id
                             ? 'bg-gray-100 text-gray-700'
