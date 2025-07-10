@@ -226,7 +226,7 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
               className="flex items-center px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Add Task
+              Task
             </button>
           </div>
 
