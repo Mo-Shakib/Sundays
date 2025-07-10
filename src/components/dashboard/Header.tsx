@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, Bell, Search, User, ChevronDown, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import NotificationPopup from './NotificationPopup';
 
 interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
@@ -64,28 +65,6 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
                 <span className="text-xs text-white font-medium">3</span>
               </span>
             </button>
-            
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                <div className="p-4 border-b border-gray-200">
-                  <h3 className="text-base font-semibold text-gray-900">Notifications</h3>
-                </div>
-                <div className="max-h-48 sm:max-h-64 overflow-y-auto">
-                  <div className="p-4 hover:bg-gray-50 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">New task assigned</p>
-                    <p className="text-xs text-gray-500">Website Redesign - 2 minutes ago</p>
-                  </div>
-                  <div className="p-4 hover:bg-gray-50 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">Project completed</p>
-                    <p className="text-xs text-gray-500">Database Migration - 1 hour ago</p>
-                  </div>
-                  <div className="p-4 hover:bg-gray-50">
-                    <p className="text-sm font-medium text-gray-900">Team meeting reminder</p>
-                    <p className="text-xs text-gray-500">Daily standup in 30 minutes</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
           
           <div className="relative">
@@ -144,12 +123,17 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
         </div>
       )}
       
+      {/* Notification Popup */}
+      <NotificationPopup 
+        isOpen={showNotifications} 
+        onClose={() => setShowNotifications(false)} 
+      />
+      
       {/* Click outside to close dropdowns */}
-      {(showNotifications || showUserDropdown || showMobileSearch) && (
+      {(showUserDropdown || showMobileSearch) && (
         <div 
           className="fixed inset-0 z-20" 
           onClick={() => {
-            setShowNotifications(false);
             setShowUserDropdown(false);
             setShowMobileSearch(false);
           }}
