@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Clock, Users, Calendar } from 'lucide-react';
+import { X, Clock, Users, Calendar, ChevronDown } from 'lucide-react';
 
 interface ScheduleModalProps {
   selectedDate: Date;
@@ -10,23 +10,42 @@ interface ScheduleModalProps {
 const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onClose }) => {
   const [formData, setFormData] = useState({
     title: '',
-    startTime: '',
-    endTime: '',
+    startTime: { hour: '10', minute: '00', period: 'AM' },
+    endTime: { hour: '11', minute: '00', period: 'AM' },
     type: 'meeting' as 'meeting' | 'task',
     description: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Generate options for dropdowns
+  const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+  const periods = ['AM', 'PM'];
+
+  // Convert custom time format to 24-hour format
+  const convertToTimeString = (timeObj: { hour: string; minute: string; period: string }) => {
+    let hour = parseInt(timeObj.hour);
+    if (timeObj.period === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (timeObj.period === 'AM' && hour === 12) {
+      hour = 0;
+    }
+    return `${hour.toString().padStart(2, '0')}:${timeObj.minute}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || !formData.startTime || !formData.endTime) {
+    if (!formData.title || !formData.startTime.hour || !formData.endTime.hour) {
       alert('Please fill in all required fields');
       return;
     }
 
+    const startTimeString = convertToTimeString(formData.startTime);
+    const endTimeString = convertToTimeString(formData.endTime);
+
     // Validate end time is after start time
-    if (formData.endTime <= formData.startTime) {
+    if (endTimeString <= startTimeString) {
       alert('End time must be after start time');
       return;
     }
@@ -36,8 +55,8 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
     try {
       const scheduleItem = {
         title: formData.title,
-        startTime: formData.startTime,
-        endTime: formData.endTime,
+        startTime: startTimeString,
+        endTime: endTimeString,
         type: formData.type,
         description: formData.description
       };
@@ -48,6 +67,133 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const updateStartTime = (field: string, value: string) => {
+    setFormData({
+      ...formData,
+      startTime: { ...formData.startTime, [field]: value }
+    });
+  };
+
+  const updateEndTime = (field: string, value: string) => {
+    setFormData({
+      ...formData,
+      endTime: { ...formData.endTime, [field]: value }
+    });
+  };
+
+  const TimeSelector = ({ 
+    time, 
+    onTimeChange, 
+    label, 
+    disabled 
+  }: { 
+    time: { hour: string; minute: string; period: string }; 
+    onTimeChange: (field: string, value: string) => void;
+    label: string;
+    disabled: boolean;
+  }) => (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {label} *
+      </label>
+      <div className="flex space-x-2">
+        {/* Hour Selector */}
+        <div className="relative flex-1">
+          <select
+            value={time.hour}
+            onChange={(e) => onTimeChange('hour', e.target.value)}
+            disabled={disabled}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white disabled:opacity-50"
+          >
+            {hours.map(hour => (
+              <option key={hour} value={hour}>{hour}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        </div>
+
+        <span className="flex items-end pb-2 text-gray-500 font-medium">:</span>
+
+        {/* Minute Selector */}
+        <div className="relative flex-1">
+          <select
+            value={time.minute}
+            onChange={(e) => onTimeChange('minute', e.target.value)}
+            disabled={disabled}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white disabled:opacity-50"
+          >
+            {minutes.filter((_, i) => i % 15 === 0).map(minute => (
+              <option key={minute} value={minute}>{minute}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        </div>
+
+        {/* AM/PM Selector */}
+        <div className="relative">
+          <select
+            value={time.period}
+            onChange={(e) => onTimeChange('period', e.target.value)}
+            disabled={disabled}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white disabled:opacity-50 min-w-[70px]"
+          >
+            {periods.map(period => (
+              <option key={period} value={period}>{period}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        </div>
+      </div>
+    </div>
+  );
+
+  // Quick time preset buttons
+  const timePresets = [
+    { label: '30 min', duration: 30 },
+    { label: '1 hour', duration: 60 },
+    { label: '1.5 hours', duration: 90 },
+    { label: '2 hours', duration: 120 }
+  ];
+
+  const setQuickDuration = (minutes: number) => {
+    const startHour = parseInt(formData.startTime.hour);
+    const startMinute = parseInt(formData.startTime.minute);
+    const startPeriod = formData.startTime.period;
+
+    // Convert to 24-hour format for calculation
+    let start24Hour = startHour;
+    if (startPeriod === 'PM' && startHour !== 12) start24Hour += 12;
+    if (startPeriod === 'AM' && startHour === 12) start24Hour = 0;
+
+    const startTotalMinutes = start24Hour * 60 + startMinute;
+    const endTotalMinutes = startTotalMinutes + minutes;
+
+    const endHour24 = Math.floor(endTotalMinutes / 60) % 24;
+    const endMinute = endTotalMinutes % 60;
+
+    // Convert back to 12-hour format
+    let endHour = endHour24;
+    let endPeriod = 'AM';
+    
+    if (endHour24 === 0) {
+      endHour = 12;
+    } else if (endHour24 > 12) {
+      endHour = endHour24 - 12;
+      endPeriod = 'PM';
+    } else if (endHour24 === 12) {
+      endPeriod = 'PM';
+    }
+
+    setFormData({
+      ...formData,
+      endTime: {
+        hour: endHour.toString().padStart(2, '0'),
+        minute: endMinute.toString().padStart(2, '0'),
+        period: endPeriod
+      }
+    });
   };
 
   return (
@@ -128,39 +274,43 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
             </div>
           </div>
 
-          {/* Time Range */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Time Selectors */}
+          <div className="space-y-4">
+            <TimeSelector
+              time={formData.startTime}
+              onTimeChange={updateStartTime}
+              label="Start Time"
+              disabled={isSubmitting}
+            />
+
+            <TimeSelector
+              time={formData.endTime}
+              onTimeChange={updateEndTime}
+              label="End Time"
+              disabled={isSubmitting}
+            />
+
+            {/* Quick Duration Buttons */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Start Time *
+                Quick Duration
               </label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="time"
-                  value={formData.startTime}
-                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  disabled={isSubmitting}
-                />
+              <div className="grid grid-cols-2 gap-2">
+                {timePresets.map((preset) => (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => setQuickDuration(preset.duration)}
+                    disabled={isSubmitting}
+                    className="px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
               </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                End Time *
-              </label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="time"
-                  value={formData.endTime}
-                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  disabled={isSubmitting}
-                />
-              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Click to automatically set end time based on start time
+              </p>
             </div>
           </div>
 
