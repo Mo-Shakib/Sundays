@@ -48,6 +48,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   const [analysisText, setAnalysisText] = useState('');
   const [progressText, setProgressText] = useState('');
   const [showProgress, setShowProgress] = useState(false);
+  
+  // Add state for inspiring message to prevent flashing
+  const [inspiringMessage, setInspiringMessage] = useState('');
 
   // Add missing helper functions
   const getCurrentDate = () => {
@@ -413,26 +416,74 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   const stats = calculateStats();
 
-  // Dynamic inspiring message based on performance
+  // Dynamic inspiring message based on performance - now returns stable message
   const getInspiringMessage = () => {
     const { productivityScore, totalCompleted, totalOverdue, tasksDueToday } = stats;
     
+    const messages = {
+        overdueAndToday: [
+            "⚡ Time to power through! You have overdue tasks and deadlines today. Focus mode activated!",
+            "🔥 Red alert! Overdue tasks are piling up and today's deadlines are waiting. Time to hustle!",
+            "💥 Crisis mode! You've got old tasks haunting you and new ones knocking. Let's tackle them!"
+        ],
+        todayTasks: [
+            "🎯 Today's the day! You have tasks due today. Let's knock them out one by one!",
+            "🌅 Fresh start! Today's tasks are waiting for your attention. Make it happen!",
+            "🎪 Showtime! Your tasks are ready for the spotlight. Let's make today amazing!"
+        ],
+        excellent90: [
+            "🌟 Outstanding! You're a productivity champion! Your performance is truly inspiring.",
+            "👑 Royalty level! You're ruling the productivity kingdom with style and grace!",
+            "🏆 Hall of fame! Your productivity skills deserve a standing ovation!"
+        ],
+        good75: [
+            "🚀 Excellent work! You're consistently delivering great results. Keep up this momentum!",
+            "💪 Strong performer! You're building an impressive track record of success!",
+            "⭐ Rising star! Your consistent efforts are paying off beautifully!"
+        ],
+        decent60: [
+            "💪 Good progress! You're building strong habits. A few tweaks and you'll be unstoppable!",
+            "🌱 Growing strong! Your efforts are taking root. Keep pushing forward!",
+            "🎯 Getting warmer! You're on the right track. Fine-tune and you'll hit the target!"
+        ],
+        someProgress: [
+            "🌱 Every step counts! You're making progress. Focus on one task at a time!",
+            "🐢 Slow and steady! Even small steps forward are better than standing still!",
+            "💧 Drop by drop! You're filling the bucket of success one task at a time!"
+        ],
+        lowPerformance: [
+            "💸 You're literally paying for this app to watch your tasks collect dust. What a waste!",
+            "🗑️ Your productivity is lower than a broken calculator. Time to get moving!",
+            "🤡 Congratulations! You've mastered the art of doing absolutely nothing productive!",
+            "💀 Your motivation flatlined. Someone call the productivity paramedics!",
+            "🐌 Even snails are embarrassed by your task completion speed!",
+            "🦥 You've turned laziness into an art form. Too bad it doesn't pay bills!",
+            "😴 Wake up! Your future self is already disappointed in you!",
+            "🤦 This is embarrassing. Your task list has more dust than a haunted house!"
+        ]
+    };
+    
     if (totalOverdue > 0 && tasksDueToday > 0) {
-      return "⚡ Time to power through! You have overdue tasks and deadlines today. Focus mode activated!";
+        return messages.overdueAndToday[Math.floor(Math.random() * messages.overdueAndToday.length)];
     } else if (tasksDueToday > 0) {
-      return "🎯 Today's the day! You have tasks due today. Let's knock them out one by one!";
+        return messages.todayTasks[Math.floor(Math.random() * messages.todayTasks.length)];
     } else if (productivityScore >= 90) {
-      return "🌟 Outstanding! You're a productivity champion! Your exceptional performance is truly inspiring.";
+        return messages.excellent90[Math.floor(Math.random() * messages.excellent90.length)];
     } else if (productivityScore >= 75) {
-      return "🚀 Excellent work! You're consistently delivering great results. Keep up this fantastic momentum!";
+        return messages.good75[Math.floor(Math.random() * messages.good75.length)];
     } else if (productivityScore >= 60) {
-      return "💪 Good progress! You're building strong habits. A few tweaks and you'll be unstoppable!";
+        return messages.decent60[Math.floor(Math.random() * messages.decent60.length)];
     } else if (totalCompleted > 0) {
-      return "🌱 Every step counts! You're making progress. Focus on one task at a time and watch your success grow!";
+        return messages.someProgress[Math.floor(Math.random() * messages.someProgress.length)];
     } else {
-      return "✨ Today is full of possibilities! Start with one small task and build your momentum from there!";
+        return messages.lowPerformance[Math.floor(Math.random() * messages.lowPerformance.length)];
     }
   };
+
+  // Set inspiring message once when stats change
+  useEffect(() => {
+    setInspiringMessage(getInspiringMessage());
+  }, [stats.productivityScore, stats.totalOverdue, stats.tasksDueToday, stats.totalCompleted]);
 
   // Typewriter effect function
   const startTypewriter = () => {
@@ -456,25 +507,69 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     
     // Dynamic words for randomization
     const dynamicWords = {
-      achievements: ['victories', 'accomplishments', 'wins', 'successes', 'triumphs', 'breakthroughs', 'milestones'],
-      progress: ['momentum', 'advancement', 'growth', 'development', 'evolution', 'trajectory', 'progression'],
-      energy: ['drive', 'passion', 'enthusiasm', 'vigor', 'determination', 'zeal', 'spirit'],
-      excellence: ['brilliance', 'mastery', 'expertise', 'finesse', 'precision', 'prowess', 'sophistication'],
-      journey: ['adventure', 'expedition', 'voyage', 'quest', 'mission', 'pathway', 'odyssey'],
-      power: ['strength', 'force', 'might', 'capability', 'potential', 'influence', 'impact'],
-      future: ['tomorrow', 'destiny', 'horizon', 'possibilities', 'opportunities', 'prospects', 'vision'],
-      action: ['execution', 'implementation', 'delivery', 'performance', 'operation', 'accomplishment', 'achievement']
+      achievements: ['victories', 'accomplishments', 'wins', 'successes', 'triumphs', 'breakthroughs', 'milestones', 'conquests', 'feats', 'attainments', 'gains', 'advances', 'strides', 'leaps', 'bounds', 'peaks', 'summits', 'pinnacles', 'heights', 'records'],
+      progress: ['momentum', 'advancement', 'growth', 'development', 'evolution', 'trajectory', 'progression', 'ascent', 'climb', 'rise', 'surge', 'flow', 'movement', 'stride', 'march', 'journey', 'transformation', 'metamorphosis', 'elevation', 'acceleration'],
+      energy: ['drive', 'passion', 'enthusiasm', 'vigor', 'determination', 'zeal', 'spirit', 'fire', 'spark', 'flame', 'intensity', 'dynamism', 'vitality', 'power', 'force', 'magnetism', 'charisma', 'radiance', 'brilliance', 'luminosity'],
+      excellence: ['brilliance', 'mastery', 'expertise', 'finesse', 'precision', 'prowess', 'sophistication', 'artistry', 'craftsmanship', 'virtuosity', 'genius', 'talent', 'skill', 'dexterity', 'grace', 'elegance', 'refinement', 'polish', 'distinction', 'superiority'],
+      journey: ['adventure', 'expedition', 'voyage', 'quest', 'mission', 'pathway', 'odyssey', 'pilgrimage', 'exploration', 'discovery', 'venture', 'crusade', 'campaign', 'pursuit', 'endeavor', 'enterprise', 'undertaking', 'saga', 'epic', 'chronicle'],
+      power: ['strength', 'force', 'might', 'capability', 'potential', 'influence', 'impact', 'authority', 'command', 'control', 'dominance', 'supremacy', 'mastery', 'prowess', 'muscle', 'clout', 'leverage', 'magnetism', 'presence', 'aura'],
+      future: ['tomorrow', 'destiny', 'horizon', 'possibilities', 'opportunities', 'prospects', 'vision', 'dreams', 'aspirations', 'goals', 'ambitions', 'hopes', 'potential', 'promise', 'fortune', 'fate', 'calling', 'purpose', 'mission', 'legacy'],
+      action: ['execution', 'implementation', 'delivery', 'performance', 'operation', 'accomplishment', 'achievement', 'realization', 'manifestation', 'creation', 'production', 'generation', 'construction', 'building', 'crafting', 'forging', 'shaping', 'molding', 'designing', 'engineering'],
+      // Roasting words
+      failures: ['disasters', 'catastrophes', 'fiascos', 'debacles', 'blunders', 'mishaps', 'setbacks', 'flops', 'bombs', 'wrecks', 'ruins', 'chaos', 'mayhem', 'shambles', 'mess', 'trainwreck', 'nightmare', 'horror show', 'comedy of errors', 'epic fail'],
+      laziness: ['procrastination', 'sluggishness', 'lethargy', 'inertia', 'apathy', 'complacency', 'sloth', 'idleness', 'torpor', 'stagnation', 'hibernation', 'dormancy', 'paralysis', 'inaction', 'negligence', 'avoidance', 'delay tactics', 'excuse-making', 'time-wasting', 'dawdling'],
+      mockery: ['spectacle', 'joke', 'comedy', 'farce', 'parody', 'mockery', 'laughingstock', 'embarrassment', 'disgrace', 'shame', 'disappointment', 'letdown', 'anticlimax', 'underwhelming display', 'pitiful attempt', 'sad excuse', 'weak effort', 'pathetic showing', 'feeble performance', 'tragic comedy'],
+      harsh: ['brutal', 'savage', 'ruthless', 'merciless', 'unforgiving', 'devastating', 'crushing', 'punishing', 'relentless', 'vicious', 'fierce', 'intense', 'severe', 'harsh', 'cutting', 'biting', 'scathing', 'withering', 'scorching', 'blazing']
     };
 
     // Helper function to get random word
     const getRandom = (category) => dynamicWords[category][Math.floor(Math.random() * dynamicWords[category].length)];
 
-    const paragraphVariations = [
+    // Determine if performance is poor (low completion rate or high overdue count)
+    const isPoorPerformance = completionRate < 50 || totalOverdue > 5 || (totalOverdue > 0 && completionRate < 70);
+
+    const paragraphVariations = isPoorPerformance ? [
+      // Roasting variations for poor performance
+      `Oh my... what a ${getRandom('mockery')} we have here! Only ${totalCompleted} out of ${totalTasks} tasks completed? That's a ${completionRate}% completion rate that's more ${getRandom('harsh')} than a reality check! ${totalOverdue > 0 ? `And those ${totalOverdue} overdue tasks? They're practically growing cobwebs while you perfect the art of ${getRandom('laziness')}! ` : ''}${tasksDueToday > 0 ? `Plus ${tasksDueToday} more task${tasksDueToday > 1 ? 's are' : ' is'} due today - because apparently we love adding to the ${getRandom('failures')}. ` : ''}Your productivity score of ${productivityScore}/100 is a ${getRandom('harsh')} reminder that Netflix doesn't count as professional development. Time to transform this ${getRandom('mockery')} into actual ${getRandom('action')}!`,
+
+      `Well, well, well... if it isn't the master of ${getRandom('laziness')}! Your ${totalCompleted} completed tasks out of ${totalTasks} (a ${getRandom('harsh')} ${completionRate}% rate) is quite the ${getRandom('mockery')}. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks are probably wondering if they've been abandoned like last year's gym membership! ` : ''}${tasksDueToday > 0 ? `And with ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} due today, you're really building quite the collection of ${getRandom('failures')}. ` : ''}At ${productivityScore}/100, your productivity score is lower than my expectations for a productivity app user. Perhaps it's time to stop treating your to-do list like a suggestion box?`,
+
+      `*Slow clap* Bravo! What a ${getRandom('harsh')} display of ${getRandom('laziness')}! Completing only ${totalCompleted} out of ${totalTasks} tasks (${completionRate}% - ouch!) is truly a ${getRandom('mockery')} of time management. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks must feel like forgotten children at this point! ` : ''}${tasksDueToday > 0 ? `And ${tasksDueToday} more task${tasksDueToday > 1 ? 's are' : ' is'} due today because why break the streak of ${getRandom('failures')}? ` : ''}Your ${productivityScore}/100 productivity score is so low, it's practically underground. Time to climb out of this ${getRandom('mockery')} and show those tasks who's boss!`,
+
+      `Holy ${getRandom('failures')}, Batman! This ${completionRate}% completion rate (${totalCompleted} out of ${totalTasks}) is more ${getRandom('harsh')} than a winter morning! ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks are staging a revolt against your legendary ${getRandom('laziness')}! ` : ''}${tasksDueToday > 0 ? `And ${tasksDueToday} task${tasksDueToday > 1 ? 's are' : ' is'} due today - because apparently we're collecting ${getRandom('failures')} like Pokemon cards! ` : ''}Your productivity score of ${productivityScore}/100 is such a ${getRandom('mockery')}, even procrastination is embarrassed. Time to turn this ${getRandom('harsh')} reality into some actual ${getRandom('action')}!`,
+
+      `Congratulations! You've achieved legendary status in the art of ${getRandom('laziness')}! Your ${totalCompleted} completed tasks from ${totalTasks} total (a ${getRandom('harsh')} ${completionRate}%) is quite the ${getRandom('mockery')}. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks are probably planning an intervention at this point! ` : ''}${tasksDueToday > 0 ? `With ${tasksDueToday} more task${tasksDueToday > 1 ? 's' : ''} due today, you're really perfecting the ${getRandom('failures')} collection! ` : ''}At ${productivityScore}/100, your productivity score needs life support. Perhaps it's time to stop treating deadlines like gentle suggestions?`,
+
+      `*Chef's kiss* What a magnificent ${getRandom('mockery')}! Only ${totalCompleted} out of ${totalTasks} tasks done (${completionRate}% - absolutely ${getRandom('harsh')}!) is peak ${getRandom('laziness')} performance! ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks are probably writing their memoirs about being forgotten! ` : ''}${tasksDueToday > 0 ? `And ${tasksDueToday} task${tasksDueToday > 1 ? 's are' : ' is'} due today because why not add to the ${getRandom('failures')} museum? ` : ''}Your ${productivityScore}/100 score is so low, it's practically a limbo record. Time to stop making excuses and start making ${getRandom('progress')}!`,
+
+      `Oh dear... this is more ${getRandom('harsh')} than a reality TV show! Your ${completionRate}% completion rate (${totalCompleted} of ${totalTasks} tasks) is a true ${getRandom('mockery')} of productivity! ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks are probably forming a support group for neglected responsibilities! ` : ''}${tasksDueToday > 0 ? `Plus ${tasksDueToday} more due today - because apparently we're going for the ${getRandom('failures')} world record! ` : ''}With a productivity score of ${productivityScore}/100, you're redefining what it means to underachieve. Time to transform this ${getRandom('laziness')} into legendary ${getRandom('action')}!`,
+
+      `Alert! Alert! We have a ${getRandom('harsh')} case of chronic ${getRandom('laziness')}! Completing ${totalCompleted} out of ${totalTasks} tasks (${completionRate}% - yikes!) is quite the ${getRandom('mockery')}! ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks are probably wondering if they're in witness protection! ` : ''}${tasksDueToday > 0 ? `And ${tasksDueToday} task${tasksDueToday > 1 ? 's are' : ' is'} due today because why break the ${getRandom('failures')} tradition? ` : ''}Your ${productivityScore}/100 productivity score is lower than a snake's belly. Perhaps it's time to stop perfecting the art of avoidance?`,
+
+      `Behold! The ${getRandom('harsh')} truth about your ${getRandom('laziness')}! With only ${totalCompleted} tasks completed from ${totalTasks} (a stunning ${completionRate}%), you've created quite the ${getRandom('mockery')}! ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks are probably planning their escape from your neglect! ` : ''}${tasksDueToday > 0 ? `And ${tasksDueToday} task${tasksDueToday > 1 ? 's await' : ' awaits'} today - adding to your impressive ${getRandom('failures')} collection! ` : ''}At ${productivityScore}/100, your score is so low it needs an elevator to reach disappointing. Time to stop being a ${getRandom('mockery')} and start being a ${getRandom('power')}!`,
+
+      `*Dramatic gasp* What a ${getRandom('harsh')} display of professional ${getRandom('laziness')}! Your ${completionRate}% completion rate (${totalCompleted} out of ${totalTasks}) is more ${getRandom('mockery')} than a participation trophy! ${totalOverdue > 0 ? `Those ${totalOverdue} overdue tasks are probably sending out search parties for your motivation! ` : ''}${tasksDueToday > 0 ? `With ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} due today, you're really building an empire of ${getRandom('failures')}! ` : ''}Your productivity score of ${productivityScore}/100 is so tragic, it deserves its own documentary. Time to stop being the poster child for procrastination!`
+    ] : [
+      // Positive variations for good performance
       `Your ${getRandom('achievements')} speak volumes! With ${totalCompleted} out of ${totalTasks} tasks conquered (${completionRate}% completion rate), you're demonstrating exceptional ${getRandom('progress')}. ${totalOverdue > 0 ? `Yes, ${totalOverdue} task${totalOverdue > 1 ? 's are' : ' is'} calling for your immediate ${getRandom('energy')}, ` : ''}${tasksDueToday > 0 ? `and ${tasksDueToday} task${tasksDueToday > 1 ? 's await' : ' awaits'} your ${getRandom('excellence')} today. ` : ''}Your productivity score of ${productivityScore}/100 reflects your ${getRandom('journey')} toward ${getRandom('excellence')}. ${remaining > 0 ? `The remaining ${remaining} task${remaining > 1 ? 's are' : ' is'} your next opportunity to showcase your ${getRandom('power')}!` : `You've achieved perfect completion - what an inspiring display of ${getRandom('excellence')}!`}`,
       
       `The ${getRandom('energy')} you're building is incredible! Completing ${totalCompleted} of ${totalTasks} tasks (${completionRate}% success rate) shows your unwavering ${getRandom('progress')}. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue task${totalOverdue > 1 ? 's' : ''} need your ${getRandom('power')} to transform into ${getRandom('achievements')}, ` : ''}${tasksDueToday > 0 ? `while ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} due today await your signature ${getRandom('excellence')}. ` : ''}At ${productivityScore}/100, your ${getRandom('journey')} is accelerating toward greatness. ${remaining > 0 ? `Channel that ${getRandom('energy')} into the final ${remaining} task${remaining > 1 ? 's' : ''} ahead!` : `Perfect execution achieved - your ${getRandom('journey')} to completion is masterful!`}`,
-      
-      `What a remarkable display of ${getRandom('excellence')}! Your ${totalCompleted} completed tasks out of ${totalTasks} (${completionRate}% achievement rate) illuminate your path to ${getRandom('achievements')}. ${totalOverdue > 0 ? `Transform those ${totalOverdue} overdue challenge${totalOverdue > 1 ? 's' : ''} into stepping stones with your natural ${getRandom('power')}, ` : ''}${tasksDueToday > 0 ? `and let today's ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} witness your ${getRandom('energy')} in ${getRandom('action')}. ` : ''}Your ${productivityScore}/100 score reflects the ${getRandom('progress')} you're creating. ${remaining > 0 ? `The ${remaining} remaining task${remaining > 1 ? 's represent' : ' represents'} your canvas for continued ${getRandom('excellence')}!` : `Complete mastery achieved - your ${getRandom('future')} is bright with possibility!`}`
+
+      `Witness the ${getRandom('power')} of focused ${getRandom('action')}! Your ${totalCompleted} completed tasks from ${totalTasks} total (${completionRate}% mastery) showcase your relentless ${getRandom('progress')}. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue item${totalOverdue > 1 ? 's' : ''} await your transformative ${getRandom('energy')}, ` : ''}${tasksDueToday > 0 ? `and ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} today will experience your ${getRandom('excellence')} firsthand. ` : ''}Your ${productivityScore}/100 productivity score mirrors your ${getRandom('journey')} of continuous ${getRandom('achievements')}. ${remaining > 0 ? `Unleash your ${getRandom('power')} on the remaining ${remaining} challenge${remaining > 1 ? 's' : ''}!` : `Flawless completion - your ${getRandom('excellence')} knows no bounds!`}`,
+
+      `Behold the ${getRandom('excellence')} of your ${getRandom('action')}! With ${totalCompleted} victories out of ${totalTasks} battles (${completionRate}% conquest rate), your ${getRandom('progress')} is undeniable. ${totalOverdue > 0 ? `Convert those ${totalOverdue} overdue task${totalOverdue > 1 ? 's' : ''} into ${getRandom('achievements')} with your signature ${getRandom('energy')}, ` : ''}${tasksDueToday > 0 ? `while ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} today will bow to your ${getRandom('excellence')}. ` : ''}At ${productivityScore}/100, you're crafting a ${getRandom('journey')} of pure ${getRandom('excellence')}. ${remaining > 0 ? `Direct your ${getRandom('power')} toward the remaining ${remaining} target${remaining > 1 ? 's' : ''}!` : `Total domination achieved - your ${getRandom('future')} radiates with potential!`}`,
+
+      `Your ${getRandom('energy')} is absolutely magnetic! Conquering ${totalCompleted} of ${totalTasks} tasks (${completionRate}% excellence rate) demonstrates your unstoppable ${getRandom('progress')}. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue challenge${totalOverdue > 1 ? 's' : ''} need your ${getRandom('power')} to become ${getRandom('achievements')}, ` : ''}${tasksDueToday > 0 ? `and ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} today will witness your ${getRandom('excellence')} in motion. ` : ''}Your ${productivityScore}/100 score illuminates the ${getRandom('journey')} you're creating. ${remaining > 0 ? `Focus your ${getRandom('energy')} on the remaining ${remaining} opportunity${remaining > 1 ? 'ies' : 'y'}!` : `Perfect mastery - your ${getRandom('journey')} is a masterpiece!`}`,
+
+      `The ${getRandom('power')} of your determination shines bright! Your ${totalCompleted} completed tasks from ${totalTasks} total (${completionRate}% triumph rate) reveal your extraordinary ${getRandom('progress')}. ${totalOverdue > 0 ? `Transform those ${totalOverdue} overdue item${totalOverdue > 1 ? 's' : ''} with your natural ${getRandom('power')}, ` : ''}${tasksDueToday > 0 ? `and let ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} today experience your ${getRandom('excellence')}. ` : ''}Your ${productivityScore}/100 productivity reflects the ${getRandom('journey')} of ${getRandom('achievements')} you're building. ${remaining > 0 ? `Channel your ${getRandom('energy')} into the final ${remaining} mission${remaining > 1 ? 's' : ''}!` : `Absolute perfection - your ${getRandom('excellence')} is legendary!`}`,
+
+      `What incredible ${getRandom('progress')} you've generated! Completing ${totalCompleted} out of ${totalTasks} tasks (${completionRate}% success) showcases your relentless ${getRandom('progress')}. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue task${totalOverdue > 1 ? 's' : ''} await your transformative ${getRandom('energy')}, ` : ''}${tasksDueToday > 0 ? `while ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} today will feel your ${getRandom('excellence')}. ` : ''}At ${productivityScore}/100, your ${getRandom('journey')} toward ${getRandom('achievements')} accelerates. ${remaining > 0 ? `Apply your ${getRandom('power')} to the remaining ${remaining} challenge${remaining > 1 ? 's' : ''}!` : `Complete victory - your ${getRandom('future')} blazes with promise!`}`,
+
+      `Your ${getRandom('excellence')} is absolutely stunning! With ${totalCompleted} tasks conquered from ${totalTasks} total (${completionRate}% mastery), you're creating unstoppable ${getRandom('progress')}. ${totalOverdue > 0 ? `Convert those ${totalOverdue} overdue opportunity${totalOverdue > 1 ? 'ies' : 'y'} into ${getRandom('achievements')} with your ${getRandom('energy')}, ` : ''}${tasksDueToday > 0 ? `and ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} today will witness your ${getRandom('excellence')}. ` : ''}Your ${productivityScore}/100 score reflects the magnificent ${getRandom('journey')} you're on. ${remaining > 0 ? `Unleash your ${getRandom('power')} on the final ${remaining} target${remaining > 1 ? 's' : ''}!` : `Flawless execution - your ${getRandom('excellence')} is inspirational!`}`,
+
+      `Behold the ${getRandom('energy')} of your ${getRandom('action')}! Your ${totalCompleted} completed tasks out of ${totalTasks} (${completionRate}% achievement) illuminate your path of ${getRandom('progress')}. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue task${totalOverdue > 1 ? 's' : ''} need your signature ${getRandom('energy')} to become ${getRandom('achievements')}, ` : ''}${tasksDueToday > 0 ? `while ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} today await your ${getRandom('excellence')}. ` : ''}At ${productivityScore}/100, you're crafting a ${getRandom('journey')} of pure ${getRandom('excellence')}. ${remaining > 0 ? `Direct your ${getRandom('power')} toward the remaining ${remaining} quest${remaining > 1 ? 's' : ''}!` : `Total mastery achieved - your ${getRandom('future')} sparkles with potential!`}`,
+
+      `The ${getRandom('power')} of your determination shines bright! Your ${totalCompleted} completed tasks from ${totalTasks} total (${completionRate}% triumph rate) reveal your extraordinary ${getRandom('progress')}. ${totalOverdue > 0 ? `Transform those ${totalOverdue} overdue item${totalOverdue > 1 ? 's' : ''} with your natural ${getRandom('power')}, ` : ''}${tasksDueToday > 0 ? `and let ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} today experience your ${getRandom('excellence')}. ` : ''}Your ${productivityScore}/100 productivity reflects the ${getRandom('journey')} of ${getRandom('achievements')} you're building. ${remaining > 0 ? `Channel your ${getRandom('energy')} into the final ${remaining} mission${remaining > 1 ? 's' : ''}!` : `Absolute perfection - your ${getRandom('excellence')} is legendary!`}`,
     ];
 
     // Return a random variation
@@ -484,7 +579,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   // Handle analysis and typewriter effect
   useEffect(() => {
     const analysisMessages = [
-      'Analyzing your productivity patterns...',
+      'Analyzing your patterns...',
       'Crunching task completion data...',
       'Evaluating workflow efficiency...',
       'Processing performance metrics...',
@@ -507,7 +602,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           setIsAnalyzing(false);
           setShowProgress(true);
           startTypewriter();
-        }, 500);
+        }, 900);
       }
     }, 300);
 
@@ -548,7 +643,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
           {/* Inspiring Message */}
           <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-            <p className="text-blue-800 font-medium text-center text-sm md:text-base">{getInspiringMessage()}</p>
+            <p className="text-blue-800 font-medium text-center text-sm md:text-base">{inspiringMessage}</p>
           </div>
 
           {/* Mobile Action Buttons */}
@@ -682,11 +777,11 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           {/* Filter Controls */}
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+          <div className="mb-4 flex flex-col space-y-3">
             <h2 className="text-lg md:text-xl font-semibold text-gray-900">
               {selectedProjectId ? `${selectedProjectName} Tasks` : 'Your Task Overview'}
             </h2>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:items-center">
               <div className="relative">
                 <select 
                   value={timeFilter}
