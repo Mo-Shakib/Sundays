@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Share, Clock, Calendar, StickyNote, MoreHorizontal, TrendingUp, Target, Zap, Award, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Share, Clock, Calendar, MoreHorizontal, TrendingUp, Target, Zap, Award, Users, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
@@ -42,28 +42,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
-
-  // Notes state
-  const [notes, setNotes] = useState([
-    {
-      id: 1,
-      text: 'Review Q4 goals',
-      description: 'Check progress on quarterly objectives',
-      completed: false
-    },
-    {
-      id: 2,
-      text: 'Update project timeline',
-      description: 'Adjust milestones based on current progress',
-      completed: true
-    },
-    {
-      id: 3,
-      text: 'Team feedback session',
-      description: 'Gather input on recent sprint',
-      completed: false
-    }
-  ]);
 
   // Load schedule items on component mount
   useEffect(() => {
@@ -286,17 +264,13 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     ? projects.find(p => p.id === selectedProjectId)?.name || 'Unknown Project'
     : 'All Projects';
 
-  const toggleNote = (id: number) => {
-    setNotes(notes.map(note => 
-      note.id === id ? { ...note, completed: !note.completed } : note
-    ));
-  };
-
+  // Handle task click to open details
   const handleTaskClick = (task) => {
     setSelectedTask(task);
     setShowTaskModal(true);
   };
 
+  // Handle add task button click
   const handleAddTask = () => {
     // Check if there are any active projects
     const activeProjects = projects.filter(project => !project.archived);
@@ -307,21 +281,26 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     setShowAddTaskModal(true);
   };
 
+  // Handle project creation from modal
   const handleCreateProjectFromModal = () => {
     setShowNoProjectsModal(false);
     onNavigateToProjects();
   };
+
+  // Handle task save (update)
   const handleSaveTask = (updatedTask) => {
     onUpdateTask(updatedTask);
     setShowTaskModal(false);
     setSelectedTask(null);
   };
 
+  // Handle new task creation
   const handleCreateTask = (newTask) => {
     onAddTask(newTask);
     setShowAddTaskModal(false);
   };
 
+  // Handle task deletion
   const handleDeleteTask = (taskId) => {
     onDeleteTask(taskId);
     setShowTaskModal(false);
@@ -1080,43 +1059,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                       </div>
                     ))
                   )}
-                </div>
-              </div>
-            </div>
-
-            {/* Notes Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base md:text-lg font-semibold text-gray-900">Notes</h3>
-                  <StickyNote className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
-                </div>
-              </div>
-              
-              <div className="p-4 md:p-6">
-                <div className="space-y-3 md:space-y-4">
-                  {notes.map((note) => (
-                    <div key={note.id} className="flex items-start space-x-2 md:space-x-3 p-2 rounded hover:bg-gray-50 transition-colors">
-                      <button
-                        onClick={() => toggleNote(note.id)}
-                        className={`mt-1 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
-                          note.completed
-                            ? 'bg-purple-500 border-purple-500 text-white'
-                            : 'border-gray-300 hover:border-purple-500'
-                        }`}
-                      >
-                        {note.completed && <span className="text-xs">✓</span>}
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <h4 className={`text-sm font-medium ${
-                          note.completed ? 'line-through text-gray-500' : 'text-gray-900'
-                        }`}>
-                          {note.text}
-                        </h4>
-                        <p className="text-xs text-gray-500 mt-1">{note.description}</p>
-                      </div>
-                    </div>
-                  ))}
                 </div>
               </div>
             </div>
