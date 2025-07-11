@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Trash2, Clock, AlertTriangle, Target } from 'lucide-react';
+import { X, Trash2, Clock, AlertTriangle, Target, Bell, TrendingUp, Award } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
 
 interface NotificationPopupProps {
@@ -25,29 +25,81 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ isOpen, onClose }
     return `${days}d ago`;
   };
 
-  const getColorClasses = (color: string) => {
+  const getBorderColorClass = (color: string) => {
     const colorMap = {
-      blue: 'bg-blue-500',
-      green: 'bg-green-500',
-      yellow: 'bg-yellow-500',
-      purple: 'bg-purple-500',
-      red: 'bg-red-500',
-      orange: 'bg-orange-500'
+      blue: 'border-l-blue-400',
+      green: 'border-l-green-400',
+      yellow: 'border-l-yellow-400',
+      purple: 'border-l-purple-400',
+      red: 'border-l-red-400',
+      orange: 'border-l-orange-400'
     };
-    return colorMap[color as keyof typeof colorMap] || 'bg-blue-500';
+    return colorMap[color as keyof typeof colorMap] || 'border-l-blue-400';
+  };
+
+  const getIconBackgroundClass = (color: string) => {
+    const colorMap = {
+      blue: 'bg-blue-100 text-blue-600',
+      green: 'bg-green-100 text-green-600',
+      yellow: 'bg-yellow-100 text-yellow-600',
+      purple: 'bg-purple-100 text-purple-600',
+      red: 'bg-red-100 text-red-600',
+      orange: 'bg-orange-100 text-orange-600'
+    };
+    return colorMap[color as keyof typeof colorMap] || 'bg-blue-100 text-blue-600';
   };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'overdue':
-        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+        return <AlertTriangle className="w-4 h-4" />;
       case 'deadline':
       case 'reminder':
-        return <Clock className="w-4 h-4 text-orange-500" />;
+        return <Clock className="w-4 h-4" />;
       case 'task':
-        return <Target className="w-4 h-4 text-purple-500" />;
+        return <Target className="w-4 h-4" />;
+      case 'productivity':
+        return <TrendingUp className="w-4 h-4" />;
+      case 'achievement':
+        return <Award className="w-4 h-4" />;
+      case 'motivation':
+        return <Bell className="w-4 h-4" />;
       default:
-        return null;
+        return <Bell className="w-4 h-4" />;
+    }
+  };
+
+  const getNotificationTypeLabel = (type: string) => {
+    switch (type) {
+      case 'overdue':
+        return 'Overdue';
+      case 'deadline':
+        return 'Deadline';
+      case 'reminder':
+        return 'Reminder';
+      case 'task':
+        return 'Task';
+      case 'productivity':
+        return 'Productivity';
+      case 'achievement':
+        return 'Achievement';
+      case 'motivation':
+        return 'Motivation';
+      default:
+        return 'Notification';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-700';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'low':
+        return 'bg-green-100 text-green-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -99,48 +151,70 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ isOpen, onClose }
                 <p className="text-sm text-gray-500">No new notifications right now. Keep up the great work!</p>
               </div>
             ) : (
-              state.notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  onClick={() => handleNotificationClick(notification.id)}
-                  className={`p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors ${
-                    !notification.isRead ? 'bg-blue-50' : ''
-                  } ${notification.priority === 'high' ? 'border-l-4 border-red-400' : ''}`}
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex items-center space-x-2 mt-1">
-                      <div 
-                        className={`w-2 h-2 rounded-full flex-shrink-0 ${getColorClasses(notification.color)}`}
-                      ></div>
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between">
-                        <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
-                          {notification.title}
+              <div className="py-2">
+                {state.notifications.map((notification) => (
+                  <button
+                    key={notification.id}
+                    onClick={() => handleNotificationClick(notification.id)}
+                    className={`w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-l-4 ${
+                      !notification.isRead 
+                        ? `bg-blue-50 ${getBorderColorClass(notification.color)}` 
+                        : getBorderColorClass(notification.color)
+                    }`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        getIconBackgroundClass(notification.color)
+                      }`}>
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h4 className={`text-sm font-medium truncate ${
+                            !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                          }`}>
+                            {notification.title}
+                          </h4>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            notification.color === 'red' ? 'bg-red-100 text-red-700' :
+                            notification.color === 'orange' ? 'bg-orange-100 text-orange-700' :
+                            notification.color === 'yellow' ? 'bg-yellow-100 text-yellow-700' :
+                            notification.color === 'green' ? 'bg-green-100 text-green-700' :
+                            notification.color === 'purple' ? 'bg-purple-100 text-purple-700' :
+                            'bg-blue-100 text-blue-700'
+                          }`}>
+                            {getNotificationTypeLabel(notification.type)}
+                          </span>
+                        </div>
+                        
+                        <p className="text-xs text-gray-600 truncate mb-2 leading-relaxed">
+                          {notification.message}
                         </p>
-                        {notification.priority === 'high' && (
-                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                            Urgent
+                        
+                        <div className="flex items-center space-x-2 text-xs">
+                          <span className="text-gray-400">
+                            {getTimeAgo(notification.timestamp)}
                           </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{notification.message}</p>
-                      <div className="flex items-center justify-between mt-2">
-                        <p className="text-xs text-gray-400">{getTimeAgo(notification.timestamp)}</p>
-                        {notification.taskId && (
-                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
-                            Task
-                          </span>
-                        )}
+                          {notification.priority === 'high' && (
+                            <span className={`px-2 py-1 rounded-full font-medium ${getPriorityColor(notification.priority)}`}>
+                              Urgent
+                            </span>
+                          )}
+                          {notification.taskId && (
+                            <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">
+                              Task
+                            </span>
+                          )}
+                          {!notification.isRead && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    {!notification.isRead && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
-                    )}
-                  </div>
-                </div>
-              ))
+                  </button>
+                ))}
+              </div>
             )}
           </div>
           
