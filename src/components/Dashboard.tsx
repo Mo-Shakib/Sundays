@@ -236,6 +236,7 @@ const Dashboard = () => {
             onAddTask={handleAddTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
+            onNavigateToProjects={handleNavigateToProjects}
           />
         );
       default:

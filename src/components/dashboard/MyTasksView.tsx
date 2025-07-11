@@ -11,6 +11,7 @@ interface MyTasksViewProps {
   onAddTask: (task: any) => void;
   onUpdateTask: (task: any) => void;
   onDeleteTask: (taskId: number) => void;
+  onNavigateToProjects: () => void;
 }
 
 const MyTasksView: React.FC<MyTasksViewProps> = ({ 
@@ -18,7 +19,8 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
   projects, 
   onAddTask, 
   onUpdateTask, 
-  onDeleteTask 
+  onDeleteTask,
+  onNavigateToProjects
 }) => {
   const { user } = useAuth();
   const [selectedTask, setSelectedTask] = useState(null);
@@ -156,8 +158,7 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
 
   const handleCreateProjectFromModal = () => {
     setShowNoProjectsModal(false);
-    // Navigate to projects view - this would need to be passed down as a prop
-    // For now, we'll just close the modal
+    onNavigateToProjects();
   };
   const handleSaveTask = (updatedTask) => {
     onUpdateTask(updatedTask);
