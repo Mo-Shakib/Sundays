@@ -23,6 +23,7 @@ interface SearchComponentProps {
   placeholder?: string;
   isMobile?: boolean;
   onClose?: () => void;
+  searchRef?: React.RefObject<HTMLInputElement>;
 }
 
 const SearchComponent: React.FC<SearchComponentProps> = ({
@@ -33,13 +34,17 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
   onViewChange,
   placeholder = "Search projects and tasks...",
   isMobile = false,
-  onClose
+  onClose,
+  searchRef: externalRef
 }) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Use external ref if provided, otherwise use internal ref
+  const finalInputRef = externalRef || inputRef;
 
   // Filter and search logic
   const searchResults: SearchResult[] = React.useMemo(() => {
@@ -201,7 +206,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
           <Search className="h-5 w-5 text-gray-400" />
         </div>
         <input
-          ref={inputRef}
+          ref={finalInputRef}
           type="text"
           value={query}
           onChange={handleInputChange}

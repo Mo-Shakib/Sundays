@@ -26,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showUserDropdown, setShowUserDropdown] = React.useState(false);
   const [showMobileSearch, setShowMobileSearch] = React.useState(false);
+  const desktopSearchRef = React.useRef<HTMLInputElement>(null);
   const { user, logout } = useAuth();
   const { state: notificationState } = useNotifications();
 
@@ -37,7 +38,17 @@ const Header: React.FC<HeaderProps> = ({
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setShowMobileSearch(true);
+        
+        // Check if we're on desktop (md breakpoint and above)
+        const isDesktop = window.innerWidth >= 768;
+        
+        if (isDesktop && desktopSearchRef.current) {
+          // Focus the desktop search input
+          desktopSearchRef.current.focus();
+        } else {
+          // Show mobile search
+          setShowMobileSearch(true);
+        }
       }
     };
 
@@ -66,6 +77,7 @@ const Header: React.FC<HeaderProps> = ({
               onViewChange={onViewChange || (() => {})}
               placeholder="Search projects and tasks..."
               isMobile={false}
+              searchRef={desktopSearchRef}
             />
           </div>
           
