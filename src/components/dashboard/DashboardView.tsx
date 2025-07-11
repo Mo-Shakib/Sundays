@@ -243,6 +243,145 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     }
   });
 
+  // Filter out completed tasks for Recent Tasks section
+  const nonCompletedTasks = timeFilteredTasks.filter(task => task.status !== 'Completed');
+
+  // Group non-completed tasks by status for Recent Tasks section
+  const groupTasksByStatusForRecent = (tasks: any[]) => {
+    const today = new Date();
+    
+    // Separate overdue tasks first
+    const overdueTasks = tasks.filter(task => {
+      const dueDate = new Date(task.dueDate);
+      return dueDate < today && task.status !== 'Completed';
+    });
+    
+    // Group remaining tasks by status
+    const taskGroups = {
+      overdue: overdueTasks,
+      pending: tasks.filter(task => {
+        const dueDate = new Date(task.dueDate);
+        return task.status === 'Pending' && dueDate >= today;
+      }),
+      inProgress: tasks.filter(task => task.status === 'In Progress'),
+      onHold: tasks.filter(task => task.status === 'On Hold')
+    };
+
+    return taskGroups;
+  };
+
+  // Get section styling based on status for Recent Tasks
+  const getRecentTasksSectionStyle = (status: string) => {
+    switch (status) {
+      case 'overdue':
+        return {
+          headerBg: 'bg-red-50 border-red-200',
+          headerText: 'text-red-800',
+          icon: '🚨',
+          title: 'Overdue Tasks',
+          description: 'Needs immediate attention'
+        };
+      case 'pending':
+        return {
+          headerBg: 'bg-purple-50 border-purple-200',
+          headerText: 'text-purple-800',
+          icon: '⏳',
+          title: 'Pending Tasks',
+          description: 'Ready to start'
+        };
+      case 'inProgress':
+        return {
+          headerBg: 'bg-green-50 border-green-200',
+          headerText: 'text-green-800',
+          icon: '🚀',
+          title: 'In Progress',
+          description: 'Currently working on'
+        };
+      case 'onHold':
+        return {
+          headerBg: 'bg-yellow-50 border-yellow-200',
+          headerText: 'text-yellow-800',
+          icon: '⏸️',
+          title: 'On Hold',
+          description: 'Temporarily paused'
+        };
+      default:
+        return {
+          headerBg: 'bg-gray-50 border-gray-200',
+          headerText: 'text-gray-800',
+          icon: '📋',
+          title: 'Other Tasks',
+          description: ''
+        };
+    }
+  };
+
+  // Render task section for Recent Tasks
+  const renderRecentTaskSection = (sectionKey: string, sectionTasks: any[]) => {
+    if (sectionTasks.length === 0) return null;
+    
+    const style = getRecentTasksSectionStyle(sectionKey);
+    
+    return (
+      <div key={sectionKey} className="mb-4">
+        {/* Section Header */}
+        <div className={`px-3 md:px-4 py-2 ${style.headerBg} border rounded-t-xl`}>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm">{style.icon}</span>
+            <div>
+              <h4 className={`font-semibold text-xs md:text-sm ${style.headerText}`}>
+                {style.title} ({sectionTasks.length})
+              </h4>
+              {style.description && (
+                <p className={`text-xs ${style.headerText} opacity-75`}>
+                  {style.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Tasks */}
+        <div className="bg-white border-l border-r border-b rounded-b-xl divide-y divide-gray-200">
+          {sectionTasks.slice(0, 3).map((task) => (
+            <div key={task.id} className="p-2 md:p-3 hover:bg-gray-50 transition-colors">
+              <div 
+                className="cursor-pointer"
+                onClick={() => handleTaskClick(task)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center flex-1 min-w-0">
+                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
+                      {task.avatar}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 text-xs md:text-sm truncate">{task.name}</p>
+                      <div className="flex items-center space-x-2 text-xs text-gray-500 mt-1">
+                        <span>{getProjectName(task.projectId)}</span>
+                        <span>•</span>
+                        <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 ml-2">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                      {task.priority}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor}`}>
+                      {task.status}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const recentTaskGroups = groupTasksByStatusForRecent(nonCompletedTasks);
+
   // Sort tasks by status priority
   const sortedTasks = [...timeFilteredTasks].sort((a, b) => {
     const statusPriority = {
@@ -828,35 +967,27 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                   </div>
                 </div>
                 <div className="p-3 md:p-4 space-y-2 md:space-y-3">
-                  {sortedTasks.slice(0, 5).map((task) => (
-                    <div 
-                      key={task.id}
-                      onClick={() => handleTaskClick(task)}
-                      className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-center flex-1 min-w-0">
-                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
-                          {task.avatar}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-gray-900 text-sm md:text-base truncate">{task.name}</p>
-                          <p className="text-xs md:text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
-                        {task.status}
-                      </span>
-                    </div>
-                  ))}
-                  {sortedTasks.length === 0 && (
+                  {/* Check if we have any non-completed tasks */}
+                  {Object.values(recentTaskGroups).flat().length === 0 ? (
                     <div className="text-center py-6">
-                      <p className="text-gray-500">No tasks found</p>
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <Target className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <p className="text-gray-500 text-sm md:text-base">All caught up! No pending tasks.</p>
                       <button 
                         onClick={handleAddTask}
                         className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
                       >
-                        Create your first task
+                        Create a new task
                       </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Render sections in priority order */}
+                      {renderRecentTaskSection('overdue', recentTaskGroups.overdue)}
+                      {renderRecentTaskSection('pending', recentTaskGroups.pending)}
+                      {renderRecentTaskSection('inProgress', recentTaskGroups.inProgress)}
+                      {renderRecentTaskSection('onHold', recentTaskGroups.onHold)}
                     </div>
                   )}
                 </div>
