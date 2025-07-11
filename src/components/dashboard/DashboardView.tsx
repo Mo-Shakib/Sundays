@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Share, Clock, Calendar, StickyNote, MoreHorizontal, TrendingUp, Target, Zap, Award, Users, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
 import NoProjectsModal from './NoProjectsModal';
 import ScheduleModal from './ScheduleModal';
+import { scheduleService, ScheduleItem } from '../../services/scheduleService';
 
 interface DashboardViewProps {
   selectedProjectId: number | null;
@@ -39,41 +40,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   // Schedule-related state
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [scheduleItems, setScheduleItems] = useState([
-    {
-      id: 1,
-      title: 'Kickoff Meeting',
-      time: '01:00 PM to 02:30 PM',
-      date: new Date().toISOString().split('T')[0],
-      type: 'meeting',
-      attendees: [
-        { name: 'John', avatar: 'J', color: 'bg-blue-500' },
-        { name: 'Sarah', avatar: 'S', color: 'bg-purple-500' }
-      ]
-    },
-    {
-      id: 2,
-      title: 'Create Wordpress website for event Registration',
-      time: '04:00 PM to 02:30 PM',
-      date: new Date().toISOString().split('T')[0],
-      type: 'task',
-      attendees: [
-        { name: 'Mike', avatar: 'M', color: 'bg-green-500' },
-        { name: 'Lisa', avatar: 'L', color: 'bg-orange-500' }
-      ]
-    },
-    {
-      id: 3,
-      title: 'Create User flow for hotel booking',
-      time: '05:00 PM to 02:30 PM',
-      date: new Date().toISOString().split('T')[0],
-      type: 'task',
-      attendees: [
-        { name: 'Alex', avatar: 'A', color: 'bg-pink-500' },
-        { name: 'Emma', avatar: 'E', color: 'bg-indigo-500' }
-      ]
-    }
-  ]);
+  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
+  const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
 
   // Notes state
   const [notes, setNotes] = useState([
@@ -97,18 +65,35 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     }
   ]);
 
+  // Load schedule items on component mount
+  useEffect(() => {
+    loadScheduleItems();
+  }, []);
+
+  const loadScheduleItems = async () => {
+    try {
+      setIsLoadingSchedule(true);
+      const items = await scheduleService.getScheduleItems();
+      setScheduleItems(items);
+    } catch (error) {
+      console.error('Failed to load schedule items:', error);
+    } finally {
+      setIsLoadingSchedule(false);
+    }
+  };
+
   // Generate week days based on selected date
   const generateWeekDays = () => {
     const today = new Date();
     const currentWeekStart = new Date(today);
-    currentWeekStart.setDate(today.getDate() - today.getDay()); // Start from Sunday (getDay() returns 0 for Sunday)
+    currentWeekStart.setDate(today.getDate() - today.getDay()); // Start from Sunday
     
     const weekDays = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(currentWeekStart);
       date.setDate(currentWeekStart.getDate() + i);
       
-      const dayOfWeek = date.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
+      const dayOfWeek = date.getDay();
       const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Friday or Saturday
       
       weekDays.push({
@@ -137,27 +122,57 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   // Add new schedule item
-  const handleAddScheduleItem = (newItem) => {
-    const item = {
-      id: Date.now(),
-      ...newItem,
-      date: selectedDate.toISOString().split('T')[0],
-      attendees: newItem.attendees || [{ name: user?.name || 'You', avatar: user?.name?.charAt(0) || 'U', color: 'bg-blue-500' }]
-    };
-    setScheduleItems([...scheduleItems, item]);
-    setShowScheduleModal(false);
+  const handleAddScheduleItem = async (newItem) => {
+    try {
+      const scheduleItemData = {
+        title: newItem.title,
+        description: newItem.description || '',
+        start_time: newItem.startTime,
+        end_time: newItem.endTime,
+        date: selectedDate.toISOString().split('T')[0],
+        type: newItem.type
+      };
+
+      const createdItem = await scheduleService.createScheduleItem(scheduleItemData);
+      setScheduleItems([...scheduleItems, createdItem]);
+      setShowScheduleModal(false);
+    } catch (error) {
+      console.error('Failed to create schedule item:', error);
+      alert('Failed to create schedule item. Please try again.');
+    }
   };
 
   // Delete schedule item
-  const handleDeleteScheduleItem = (itemId) => {
-    setScheduleItems(scheduleItems.filter(item => item.id !== itemId));
+  const handleDeleteScheduleItem = async (itemId) => {
+    try {
+      await scheduleService.deleteScheduleItem(itemId);
+      setScheduleItems(scheduleItems.filter(item => item.id !== itemId));
+    } catch (error) {
+      console.error('Failed to delete schedule item:', error);
+      alert('Failed to delete schedule item. Please try again.');
+    }
   };
 
-  // Edit schedule item
-  const handleEditScheduleItem = (itemId, updatedItem) => {
-    setScheduleItems(scheduleItems.map(item => 
-      item.id === itemId ? { ...item, ...updatedItem } : item
-    ));
+  // Edit schedule item (for future use)
+  const handleEditScheduleItem = async (itemId, updatedItem) => {
+    try {
+      const updated = await scheduleService.updateScheduleItem(itemId, updatedItem);
+      setScheduleItems(scheduleItems.map(item => 
+        item.id === itemId ? updated : item
+      ));
+    } catch (error) {
+      console.error('Failed to update schedule item:', error);
+      alert('Failed to update schedule item. Please try again.');
+    }
+  };
+
+  // Format time display
+  const formatTimeDisplay = (timeString) => {
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour % 12 || 12;
+    return `${displayHour.toString().padStart(2, '0')}:${minutes} ${ampm}`;
   };
 
   // Calculate days remaining for a task
@@ -1017,7 +1032,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
                 {/* Schedule Items for Selected Date */}
                 <div className="space-y-3 md:space-y-4">
-                  {getScheduleItemsForDate(selectedDate).length === 0 ? (
+                  {isLoadingSchedule ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                      <p className="text-sm text-gray-500 mt-2">Loading schedule...</p>
+                    </div>
+                  ) : getScheduleItemsForDate(selectedDate).length === 0 ? (
                     <div className="text-center py-4">
                       <p className="text-sm text-gray-500">No events scheduled for this day</p>
                       <button
@@ -1033,16 +1053,14 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-gray-900 text-sm truncate">{item.title}</h4>
-                            <p className="text-xs text-gray-500 mt-1">{item.time}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {formatTimeDisplay(item.start_time)} to {formatTimeDisplay(item.end_time)}
+                            </p>
+                            {item.description && (
+                              <p className="text-xs text-gray-400 mt-1 truncate">{item.description}</p>
+                            )}
                             <div className="flex items-center mt-2">
-                              <div className="flex -space-x-1">
-                                {item.attendees.map((attendee, index) => (
-                                  <div key={index} className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white ${attendee.color}`}>
-                                    {attendee.avatar}
-                                  </div>
-                                ))}
-                              </div>
-                              <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                 item.type === 'meeting' ? 'bg-purple-100 text-purple-600' : 'bg-green-100 text-green-600'
                               }`}>
                                 {item.type}
@@ -1050,7 +1068,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                             </div>
                           </div>
                           <button
-                            onClick={() => handleDeleteScheduleItem(item.id)}
+                            onClick={() => handleDeleteScheduleItem(item.id!)}
                             className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all"
                             title="Delete event"
                           >
