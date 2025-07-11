@@ -43,6 +43,44 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([]);
   const [isLoadingSchedule, setIsLoadingSchedule] = useState(true);
 
+  // Add these state variables for typewriter effect
+  const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [analysisText, setAnalysisText] = useState('');
+  const [progressText, setProgressText] = useState('');
+  const [showProgress, setShowProgress] = useState(false);
+
+  // Add missing helper functions
+  const getCurrentDate = () => {
+    return new Date().toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'Critical':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'High':
+        return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'Medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Low':
+        return 'bg-green-100 text-green-800 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   // Load schedule items on component mount
   useEffect(() => {
     loadScheduleItems();
@@ -131,19 +169,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     }
   };
 
-  // Edit schedule item (for future use)
-  const handleEditScheduleItem = async (itemId, updatedItem) => {
-    try {
-      const updated = await scheduleService.updateScheduleItem(itemId, updatedItem);
-      setScheduleItems(scheduleItems.map(item => 
-        item.id === itemId ? updated : item
-      ));
-    } catch (error) {
-      console.error('Failed to update schedule item:', error);
-      alert('Failed to update schedule item. Please try again.');
-    }
-  };
-
   // Format time display
   const formatTimeDisplay = (timeString) => {
     const [hours, minutes] = timeString.split(':');
@@ -188,9 +213,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Apply time filter to tasks
   const timeFilteredTasks = filteredTasks.filter(task => {
-    // For Recent Tasks section, we want to show:
-    // 1. All non-completed tasks (regardless of time filter)
-    // 2. Recently completed tasks (based on time filter)
     const taskDate = new Date(task.dueDate);
     const today = new Date();
     
@@ -218,7 +240,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     }
   });
 
-  // Sort tasks by status priority (Pending first, Completed last)
+  // Sort tasks by status priority
   const sortedTasks = [...timeFilteredTasks].sort((a, b) => {
     const statusPriority = {
       'Pending': 1,
@@ -229,15 +251,21 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     return statusPriority[a.status] - statusPriority[b.status];
   });
 
-  // Calculate tasks completed late (after due date)
+  // Group tasks by status
+  const tasksByStatus = {
+    pending: sortedTasks.filter(task => task.status === 'Pending'),
+    inProgress: sortedTasks.filter(task => task.status === 'In Progress'),
+    onHold: sortedTasks.filter(task => task.status === 'On Hold'),
+    completed: sortedTasks.filter(task => task.status === 'Completed')
+  };
+
+  // Calculate tasks completed late
   const getCompletedLateTasks = () => {
     const completedTasks = filteredTasks.filter(task => task.status === 'Completed');
     const today = new Date();
     
     return completedTasks.filter(task => {
       const dueDate = new Date(task.dueDate);
-      // Assuming task was completed late if it's marked completed and due date has passed
-      // In a real app, you'd have a completedDate field to compare with dueDate
       return dueDate < today;
     }).map(task => {
       const dueDate = new Date(task.dueDate);
@@ -253,12 +281,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   const completedLateTasks = getCompletedLateTasks();
 
-  // Update productivity score calculation to not penalize late completions
-  const calculateProductivityScore = (stats) => {
-    // Don't count late completed tasks as negative for productivity
-    return stats.productivityScore;
-  };
-
   // Get selected project name for display
   const selectedProjectName = selectedProjectId 
     ? projects.find(p => p.id === selectedProjectId)?.name || 'Unknown Project'
@@ -272,7 +294,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Handle add task button click
   const handleAddTask = () => {
-    // Check if there are any active projects
     const activeProjects = projects.filter(project => !project.archived);
     if (activeProjects.length === 0) {
       setShowNoProjectsModal(true);
@@ -315,33 +336,28 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   // Calculate comprehensive stats
   const calculateStats = () => {
-    // Use the same filtered tasks that are displayed
     const completedTasks = filteredTasks.filter(task => task.status === 'Completed');
     const totalTasks = filteredTasks.length;
     const pendingTasks = filteredTasks.filter(task => task.status === 'Pending');
     const inProgressTasks = filteredTasks.filter(task => task.status === 'In Progress');
     const onHoldTasks = filteredTasks.filter(task => task.status === 'On Hold');
     
-    // Tasks completed on time
     const today = new Date();
     const onTimeTasks = completedTasks.filter(task => {
       const dueDate = new Date(task.dueDate);
-      return dueDate >= today; // Tasks completed before or on due date
+      return dueDate >= today;
     });
     
-    // Overdue tasks (not completed and past due date)
     const overdueTasks = filteredTasks.filter(task => {
       const dueDate = new Date(task.dueDate);
       return task.status !== 'Completed' && dueDate < today;
     });
     
-    // Tasks due today
     const tasksDueToday = filteredTasks.filter(task => {
       const dueDate = new Date(task.dueDate);
       return dueDate.toDateString() === today.toDateString() && task.status !== 'Completed';
     });
     
-    // Tasks due this week
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay());
     const weekEnd = new Date(weekStart);
@@ -352,7 +368,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       return dueDate >= weekStart && dueDate <= weekEnd && task.status !== 'Completed';
     });
     
-    // Days ahead calculation
     let totalDaysAhead = 0;
     onTimeTasks.forEach(task => {
       const dueDate = new Date(task.dueDate);
@@ -363,9 +378,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     const onTimePercentage = completedTasks.length > 0 ? Math.round((onTimeTasks.length / completedTasks.length) * 100) : 0;
     const completionRate = totalTasks > 0 ? Math.round((completedTasks.length / totalTasks) * 100) : 0;
     
-    // Productivity score (weighted calculation) 
-    // Note: We don't penalize late completions in the main score since completing late is still better than not completing
-    // The "Completed Late" section will show this information separately
     let productivityScore = 0;
     if (totalTasks > 0) {
       const completionWeight = 0.4;
@@ -374,7 +386,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       
       const completionScore = (completedTasks.length / totalTasks) * 100;
       const onTimeScore = onTimePercentage;
-      const overdueScore = Math.max(0, 100 - ((overdueTasks.length / totalTasks) * 200)); // Double penalty for overdue
+      const overdueScore = Math.max(0, 100 - ((overdueTasks.length / totalTasks) * 200));
       
       productivityScore = Math.round(
         (completionScore * completionWeight) + 
@@ -422,88 +434,85 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     }
   };
 
-  // Casual progress paragraph
+  // Typewriter effect function
+  const startTypewriter = () => {
+    const fullText = getProgressParagraph();
+    let index = 0;
+    
+    const typeInterval = setInterval(() => {
+      if (index < fullText.length) {
+        setProgressText(fullText.substring(0, index + 1));
+        index++;
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 50);
+  };
+
+  // Enhanced progress paragraph with creative variations
   const getProgressParagraph = () => {
     const { totalCompleted, totalTasks, completionRate, totalOverdue, tasksDueToday, productivityScore } = stats;
     const remaining = totalTasks - totalCompleted;
     
-    if (totalCompleted === 0) {
-      return "You're at the starting line of something great! With your organized approach and clear goals, you're perfectly positioned to tackle your tasks efficiently. Time to turn those plans into action!";
-    }
-    
-    let paragraph = `You've completed ${totalCompleted} out of ${totalTasks} tasks (${completionRate}% completion rate)`;
-    
-    if (totalOverdue > 0) {
-      paragraph += `, with ${totalOverdue} task${totalOverdue > 1 ? 's' : ''} overdue that need immediate attention`;
-    }
-    
-    if (tasksDueToday > 0) {
-      paragraph += `, and ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} due today`;
-    }
-    
-    paragraph += `. Your current productivity score is ${productivityScore}/100`;
-    
-    if (productivityScore >= 80) {
-      paragraph += " - excellent performance!";
-    } else if (productivityScore >= 60) {
-      paragraph += " - solid progress with room for improvement.";
-    } else {
-      paragraph += " - let's focus on catching up and building momentum.";
-    }
-    
-    if (remaining > 0) {
-      paragraph += ` Keep pushing forward with the remaining ${remaining} task${remaining > 1 ? 's' : ''}!`;
-    } else {
-      paragraph += " All caught up - fantastic work!";
-    }
-    
-    return paragraph;
-  };
-
-  // Get current date and format it
-  const getCurrentDate = () => {
-    const now = new Date();
-    const options: Intl.DateTimeFormatOptions = { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    // Dynamic words for randomization
+    const dynamicWords = {
+      achievements: ['victories', 'accomplishments', 'wins', 'successes', 'triumphs', 'breakthroughs', 'milestones'],
+      progress: ['momentum', 'advancement', 'growth', 'development', 'evolution', 'trajectory', 'progression'],
+      energy: ['drive', 'passion', 'enthusiasm', 'vigor', 'determination', 'zeal', 'spirit'],
+      excellence: ['brilliance', 'mastery', 'expertise', 'finesse', 'precision', 'prowess', 'sophistication'],
+      journey: ['adventure', 'expedition', 'voyage', 'quest', 'mission', 'pathway', 'odyssey'],
+      power: ['strength', 'force', 'might', 'capability', 'potential', 'influence', 'impact'],
+      future: ['tomorrow', 'destiny', 'horizon', 'possibilities', 'opportunities', 'prospects', 'vision'],
+      action: ['execution', 'implementation', 'delivery', 'performance', 'operation', 'accomplishment', 'achievement']
     };
-    return now.toLocaleDateString('en-US', options);
+
+    // Helper function to get random word
+    const getRandom = (category) => dynamicWords[category][Math.floor(Math.random() * dynamicWords[category].length)];
+
+    const paragraphVariations = [
+      `Your ${getRandom('achievements')} speak volumes! With ${totalCompleted} out of ${totalTasks} tasks conquered (${completionRate}% completion rate), you're demonstrating exceptional ${getRandom('progress')}. ${totalOverdue > 0 ? `Yes, ${totalOverdue} task${totalOverdue > 1 ? 's are' : ' is'} calling for your immediate ${getRandom('energy')}, ` : ''}${tasksDueToday > 0 ? `and ${tasksDueToday} task${tasksDueToday > 1 ? 's await' : ' awaits'} your ${getRandom('excellence')} today. ` : ''}Your productivity score of ${productivityScore}/100 reflects your ${getRandom('journey')} toward ${getRandom('excellence')}. ${remaining > 0 ? `The remaining ${remaining} task${remaining > 1 ? 's are' : ' is'} your next opportunity to showcase your ${getRandom('power')}!` : `You've achieved perfect completion - what an inspiring display of ${getRandom('excellence')}!`}`,
+      
+      `The ${getRandom('energy')} you're building is incredible! Completing ${totalCompleted} of ${totalTasks} tasks (${completionRate}% success rate) shows your unwavering ${getRandom('progress')}. ${totalOverdue > 0 ? `Those ${totalOverdue} overdue task${totalOverdue > 1 ? 's' : ''} need your ${getRandom('power')} to transform into ${getRandom('achievements')}, ` : ''}${tasksDueToday > 0 ? `while ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} due today await your signature ${getRandom('excellence')}. ` : ''}At ${productivityScore}/100, your ${getRandom('journey')} is accelerating toward greatness. ${remaining > 0 ? `Channel that ${getRandom('energy')} into the final ${remaining} task${remaining > 1 ? 's' : ''} ahead!` : `Perfect execution achieved - your ${getRandom('journey')} to completion is masterful!`}`,
+      
+      `What a remarkable display of ${getRandom('excellence')}! Your ${totalCompleted} completed tasks out of ${totalTasks} (${completionRate}% achievement rate) illuminate your path to ${getRandom('achievements')}. ${totalOverdue > 0 ? `Transform those ${totalOverdue} overdue challenge${totalOverdue > 1 ? 's' : ''} into stepping stones with your natural ${getRandom('power')}, ` : ''}${tasksDueToday > 0 ? `and let today's ${tasksDueToday} task${tasksDueToday > 1 ? 's' : ''} witness your ${getRandom('energy')} in ${getRandom('action')}. ` : ''}Your ${productivityScore}/100 score reflects the ${getRandom('progress')} you're creating. ${remaining > 0 ? `The ${remaining} remaining task${remaining > 1 ? 's represent' : ' represents'} your canvas for continued ${getRandom('excellence')}!` : `Complete mastery achieved - your ${getRandom('future')} is bright with possibility!`}`
+    ];
+
+    // Return a random variation
+    return paragraphVariations[Math.floor(Math.random() * paragraphVariations.length)];
   };
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 6) return 'Working Late?';
-    if (hour < 12) return 'Good Morning!';
-    if (hour < 17) return 'Good Afternoon!';
-    if (hour < 22) return 'Good Evening!';
-    return 'Burning the Midnight Oil?';
-  };
+  // Handle analysis and typewriter effect
+  useEffect(() => {
+    const analysisMessages = [
+      'Analyzing your productivity patterns...',
+      'Crunching task completion data...',
+      'Evaluating workflow efficiency...',
+      'Processing performance metrics...',
+      'Scanning project momentum...',
+      'Assessing time management skills...',
+      'Reviewing accomplishment trends...',
+      'Calculating productivity insights...',
+      'Examining task distribution...',
+      'Computing efficiency scores...'
+    ];
 
-  // Group tasks by status for different sections
-  const tasksByStatus = {
-    pending: sortedTasks.filter(task => task.status === 'Pending'),
-    inProgress: sortedTasks.filter(task => task.status === 'In Progress'),
-    completed: sortedTasks.filter(task => task.status === 'Completed'),
-    onHold: sortedTasks.filter(task => task.status === 'On Hold')
-  };
+    let currentMessage = 0;
+    const messageInterval = setInterval(() => {
+      if (currentMessage < analysisMessages.length) {
+        setAnalysisText(analysisMessages[currentMessage]);
+        currentMessage++;
+      } else {
+        clearInterval(messageInterval);
+        setTimeout(() => {
+          setIsAnalyzing(false);
+          setShowProgress(true);
+          startTypewriter();
+        }, 500);
+      }
+    }, 300);
 
-  // Get priority color for tasks
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'Critical':
-        return 'text-red-600 bg-red-50 border-red-200';
-      case 'High':
-        return 'text-red-600 bg-red-50 border-red-200';
-      case 'Medium':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'Low':
-        return 'text-green-600 bg-green-50 border-green-200';
-      default:
-        return 'text-gray-600 bg-gray-50 border-gray-200';
-    }
-  };
+    return () => clearInterval(messageInterval);
+  }, []);
 
   return (
     <>
@@ -542,7 +551,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             <p className="text-blue-800 font-medium text-center text-sm md:text-base">{getInspiringMessage()}</p>
           </div>
 
-          {/* Mobile Action Buttons - Below inspiring message */}
+          {/* Mobile Action Buttons */}
           <div className="sm:hidden mb-4 space-y-2">
             <button
               onClick={onNavigateToMyTasks}
@@ -560,12 +569,28 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             </button>
           </div>
 
-          {/* Progress Paragraph */}
+          {/* Progress Analysis & Paragraph */}
           <div className="mb-4 md:mb-6">
-            <p className="text-gray-600 leading-relaxed text-sm md:text-base">{getProgressParagraph()}</p>
+            {isAnalyzing ? (
+              <div className="flex items-center justify-center space-x-3 p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
+                <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+                <p className="text-gray-600 text-sm md:text-base font-medium">{analysisText}</p>
+              </div>
+            ) : showProgress ? (
+              <div className="p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
+                <p className="text-gray-600 leading-relaxed text-sm md:text-base">
+                  {progressText}
+                  <span className="animate-pulse">|</span>
+                </p>
+              </div>
+            ) : null}
           </div>
 
-          {/* Enhanced Stats Grid - Mobile Optimized */}
+          {/* Enhanced Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
             {/* Productivity Score */}
             <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
@@ -656,332 +681,96 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Additional Stats Row - Hidden on Small Mobile */}
-          <div className="hidden sm:grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-            {/* In Progress */}
-            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500">In Progress</p>
-                  <p className="text-lg font-bold text-green-600">{stats.totalInProgress}</p>
-                </div>
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-green-600" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Pending */}
-            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500">Pending</p>
-                  <p className="text-lg font-bold text-purple-600">{stats.totalPending}</p>
-                </div>
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-4 h-4 text-purple-600" />
+          {/* Filter Controls */}
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900">
+              {selectedProjectId ? `${selectedProjectName} Tasks` : 'Your Task Overview'}
+            </h2>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <div className="relative">
+                <select 
+                  value={timeFilter}
+                  onChange={(e) => setTimeFilter(e.target.value)}
+                  className="appearance-none bg-white text-xs md:text-sm text-gray-700 border border-gray-200 rounded-xl px-3 md:px-4 py-2 md:py-2.5 pr-8 md:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer min-w-0 w-full sm:w-auto"
+                >
+                  <option value="All Time">📅 All Time</option>
+                  <option value="This Week">📆 This Week</option>
+                  <option value="This Month">🗓️ This Month</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 md:px-3 pointer-events-none">
+                  <svg className="w-3 h-3 md:w-4 md:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
               </div>
-            </div>
-            
-            {/* On Hold */}
-            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500">On Hold</p>
-                  <p className="text-lg font-bold text-yellow-600">{stats.totalOnHold}</p>
-                </div>
-                <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-4 h-4 text-yellow-600" />
-                </div>
-              </div>
-            </div>
-            
-            {/* Due This Week */}
-            <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-500">Due This Week</p>
-                  <p className="text-lg font-bold text-indigo-600">{stats.tasksDueThisWeek}</p>
-                </div>
-                <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-4 h-4 text-indigo-600" />
-                </div>
-              </div>
+              <button
+                onClick={onNavigateToMyTasks}
+                className="px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all shadow-sm flex items-center justify-center whitespace-nowrap"
+              >
+                <Target className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                <span className="hidden sm:inline">View All Tasks</span>
+                <span className="sm:hidden">All Tasks</span>
+              </button>
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          {/* Tasks Sections by Priority and Status */}
+          {/* Tasks Section */}
           <div className="lg:col-span-2">
-            {/* Filter Controls */}
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-                {selectedProjectId ? `${selectedProjectName} Tasks` : 'Your Task Overview'}
-              </h2>
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                <div className="relative">
-                  <select 
-                    value={timeFilter}
-                    onChange={(e) => setTimeFilter(e.target.value)}
-                    className="appearance-none bg-white text-xs md:text-sm text-gray-700 border border-gray-200 rounded-xl px-3 md:px-4 py-2 md:py-2.5 pr-8 md:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer min-w-0 w-full sm:w-auto"
-                  >
-                    <option value="All Time">📅 All Time</option>
-                    <option value="This Week">📆 This Week</option>
-                    <option value="This Month">🗓️ This Month</option>
-                  </select>
-                  {/* Custom dropdown arrow */}
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 md:px-3 pointer-events-none">
-                    <svg className="w-3 h-3 md:w-4 md:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-                <button
-                  onClick={onNavigateToMyTasks}
-                  className="px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all shadow-sm flex items-center justify-center whitespace-nowrap"
-                >
-                  <Target className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
-                  <span className="hidden sm:inline">View All Tasks</span>
-                  <span className="sm:hidden">All Tasks</span>
-                </button>
-              </div>
-            </div>
-            
             <div className="space-y-4 md:space-y-6">
-              {/* High Priority Tasks */}
-              {sortedTasks.filter(task => task.priority === 'High' || task.priority === 'Critical').length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-red-200">
-                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-red-100 bg-red-50">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base md:text-lg font-semibold text-red-800 flex items-center">
-                        <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full mr-2 md:mr-3"></div>
-                        High Priority ({sortedTasks.filter(task => task.priority === 'High' || task.priority === 'Critical').length})
-                      </h3>
-                      <span className="text-xs md:text-sm text-red-600 bg-red-100 px-2 py-1 rounded">Urgent</span>
-                    </div>
-                  </div>
-                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
-                    {sortedTasks.filter(task => task.priority === 'High' || task.priority === 'Critical').slice(0, 3).map((task) => (
-                      <div 
-                        key={task.id}
-                        onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
-                      >
-                        <div className="flex items-center flex-1 min-w-0">
-                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
-                            {task.avatar}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 text-sm md:text-base truncate">{task.name}</p>
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mt-1">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)} w-fit`}>
-                                {task.priority}
-                              </span>
-                              <span className="text-xs md:text-sm text-gray-500 mt-1 sm:mt-0">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
-                          {task.status}
-                        </span>
-                      </div>
-                    ))}
+              {/* Recent Tasks */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900">Recent Tasks</h3>
+                    <button 
+                      onClick={onNavigateToMyTasks}
+                      className="text-xs md:text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      View All
+                    </button>
                   </div>
                 </div>
-              )}
-
-              {/* Pending Tasks */}
-              {tasksByStatus.pending.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base md:text-lg font-semibold text-gray-900 flex items-center">
-                        <div className="w-2 h-2 md:w-3 md:h-3 bg-purple-500 rounded-full mr-2 md:mr-3"></div>
-                        Pending Tasks ({tasksByStatus.pending.length})
-                      </h3>
-                      <span className="text-xs md:text-sm text-purple-600 bg-purple-50 px-2 py-1 rounded">Needs Attention</span>
-                    </div>
-                  </div>
-                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
-                    {tasksByStatus.pending.slice(0, 3).map((task) => (
-                      <div 
-                        key={task.id}
-                        onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-center flex-1 min-w-0">
-                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
-                            {task.avatar}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 text-sm md:text-base truncate">{task.name}</p>
-                            <p className="text-xs md:text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
-                          </div>
+                <div className="p-3 md:p-4 space-y-2 md:space-y-3">
+                  {sortedTasks.slice(0, 5).map((task) => (
+                    <div 
+                      key={task.id}
+                      onClick={() => handleTaskClick(task)}
+                      className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center flex-1 min-w-0">
+                        <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
+                          {task.avatar}
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
-                          {task.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* In Progress Tasks */}
-              {tasksByStatus.inProgress.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base md:text-lg font-semibold text-gray-900 flex items-center">
-                        <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full mr-2 md:mr-3"></div>
-                        In Progress ({tasksByStatus.inProgress.length})
-                      </h3>
-                      <span className="text-xs md:text-sm text-green-600 bg-green-50 px-2 py-1 rounded">Active</span>
-                    </div>
-                  </div>
-                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
-                    {tasksByStatus.inProgress.slice(0, 3).map((task) => (
-                      <div 
-                        key={task.id}
-                        onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-center flex-1 min-w-0">
-                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
-                            {task.avatar}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 text-sm md:text-base truncate">{task.name}</p>
-                            <p className="text-xs md:text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
-                          </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 text-sm md:text-base truncate">{task.name}</p>
+                          <p className="text-xs md:text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
-                          {task.status}
-                        </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Completed Late Tasks */}
-              {completedLateTasks.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-yellow-200">
-                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-yellow-100 bg-yellow-50">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base md:text-lg font-semibold text-yellow-800 flex items-center">
-                        <div className="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full mr-2 md:mr-3"></div>
-                        Completed Late ({completedLateTasks.length})
-                      </h3>
-                      <span className="text-xs md:text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Delivered Late</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
+                        {task.status}
+                      </span>
                     </div>
-                  </div>
-                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
-                    {completedLateTasks.slice(0, 3).map((task) => (
-                      <div 
-                        key={task.id}
-                        onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
-                      >
-                        <div className="flex items-center flex-1 min-w-0">
-                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
-                            {task.avatar}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 line-through text-sm md:text-base truncate">{task.name}</p>
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mt-1">
-                              <span className="text-xs md:text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full w-fit">
-                                Completed {task.daysLate} day{task.daysLate > 1 ? 's' : ''} late
-                              </span>
-                              <span className="text-xs md:text-sm text-gray-500 mt-1 sm:mt-0">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
-                            </div>
-                          </div>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
-                          ✓ Done Late
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Completed Tasks */}
-              {tasksByStatus.completed.filter(task => {
-                const dueDate = new Date(task.dueDate);
-                const today = new Date();
-                return dueDate >= today;
-              }).length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-base md:text-lg font-semibold text-gray-900 flex items-center">
-                        <div className="w-2 h-2 md:w-3 md:h-3 bg-blue-500 rounded-full mr-2 md:mr-3"></div>
-                        Recently Completed ({tasksByStatus.completed.filter(task => {
-                          const dueDate = new Date(task.dueDate);
-                          const today = new Date();
-                          return dueDate >= today;
-                        }).length})
-                      </h3>
+                  ))}
+                  {sortedTasks.length === 0 && (
+                    <div className="text-center py-6">
+                      <p className="text-gray-500">No tasks found</p>
                       <button 
-                        onClick={onNavigateToMyTasks}
-                        className="text-xs md:text-sm text-blue-600 hover:text-blue-700"
+                        onClick={handleAddTask}
+                        className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
                       >
-                        View All
+                        Create your first task
                       </button>
                     </div>
-                  </div>
-                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
-                    {tasksByStatus.completed.filter(task => {
-                      const dueDate = new Date(task.dueDate);
-                      const today = new Date();
-                      return dueDate >= today;
-                    }).slice(0, 2).map((task) => (
-                      <div 
-                        key={task.id}
-                        onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors opacity-75"
-                      >
-                        <div className="flex items-center flex-1 min-w-0">
-                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
-                            {task.avatar}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 line-through text-sm md:text-base truncate">{task.name}</p>
-                            <p className="text-xs md:text-sm text-gray-500">Completed</p>
-                          </div>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
-                          ✓ Done
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  )}
                 </div>
-              )}
-
-              {/* Empty State */}
-              {sortedTasks.length === 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8 text-center">
-                  <div className="text-gray-500">
-                    <p className="text-base md:text-lg font-medium">No tasks found</p>
-                    <p className="text-sm">
-                      {selectedProjectId 
-                        ? `No tasks in ${selectedProjectName} project yet.`
-                        : 'Create your first task to get started!'
-                      }
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           </div>
 
-          {/* Right Sidebar - Stack on Mobile */}
+          {/* Right Sidebar - Schedule */}
           <div className="space-y-4 md:space-y-6">
-            {/* Schedule Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
@@ -992,7 +781,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                   <button
                     onClick={() => setShowScheduleModal(true)}
                     className="flex items-center px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all shadow-sm"
-                    title="Add schedule item"
                   >
                     <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                     <span className="hidden sm:inline">Add Event</span>
@@ -1023,7 +811,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                       >
                         {day.date}
                       </button>
-                      {/* Indicator for items on this date */}
                       {getScheduleItemsForDate(day.fullDate).length > 0 && (
                         <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mx-auto mt-1 shadow-sm"></div>
                       )}
@@ -1042,7 +829,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                   </p>
                 </div>
 
-                {/* Schedule Items for Selected Date */}
+                {/* Schedule Items */}
                 <div className="space-y-3 md:space-y-4">
                   {isLoadingSchedule ? (
                     <div className="text-center py-6">
@@ -1087,7 +874,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                           <button
                             onClick={() => handleDeleteScheduleItem(item.id!)}
                             className="opacity-0 group-hover:opacity-100 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                            title="Remove event"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1104,7 +890,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </main>
 
-      {/* Task Detail Modal */}
+      {/* Modals */}
       {showTaskModal && selectedTask && (
         <TaskModal
           task={selectedTask}
@@ -1118,7 +904,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         />
       )}
 
-      {/* Add Task Modal */}
       {showAddTaskModal && (
         <AddTaskModal
           projects={projects.filter(project => !project.archived)}
@@ -1127,7 +912,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         />
       )}
 
-      {/* No Projects Modal */}
       {showNoProjectsModal && (
         <NoProjectsModal
           onClose={() => setShowNoProjectsModal(false)}
@@ -1135,7 +919,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         />
       )}
 
-      {/* Schedule Modal */}
       {showScheduleModal && (
         <ScheduleModal
           selectedDate={selectedDate}
