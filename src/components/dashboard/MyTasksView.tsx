@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Filter, Search, Calendar, Flag, User, Clock } from 'lucide-react';
+import { Plus, Filter, Search, Calendar, Flag, User, Clock, Sparkles, Target, TrendingUp, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
@@ -218,15 +218,15 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
         <div className="mb-4 md:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Tasks</h1>
-              <p className="text-gray-600 text-sm md:text-base">Manage your personal tasks and deadlines</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Your Mission Control</h1>
+              <p className="text-gray-600 text-sm md:text-base">Track progress, conquer deadlines, and celebrate wins</p>
             </div>
             <button 
               onClick={handleAddTask}
-              className="flex items-center justify-center px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-center px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Task
+              <Sparkles className="w-4 h-4 mr-2" />
+              Create Task
             </button>
           </div>
 
@@ -241,67 +241,95 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tasks..."
-                className="block w-full pl-9 md:pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Find your next task to tackle..."
+                className="block w-full pl-9 md:pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:bg-gray-50 transition-colors"
               />
             </div>
             
             {/* Filter Selects - Responsive Grid */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
-              <select
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-                className="px-2 md:px-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="All Time">All Time</option>
-                <option value="This Week">This Week</option>
-                <option value="This Month">This Month</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={timeFilter}
+                  onChange={(e) => setTimeFilter(e.target.value)}
+                  className="appearance-none w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm hover:bg-gray-50 transition-colors cursor-pointer pr-8"
+                >
+                  <option value="All Time">All Time</option>
+                  <option value="This Week">This Week</option>
+                  <option value="This Month">This Month</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
               
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-2 md:px-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="All">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Completed">Completed</option>
-                <option value="On Hold">On Hold</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="appearance-none w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm hover:bg-gray-50 transition-colors cursor-pointer pr-8"
+                >
+                  <option value="All">All Status</option>
+                  <option value="Pending">Pending</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="On Hold">On Hold</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
               
-              <select
-                value={filterPriority}
-                onChange={(e) => setFilterPriority(e.target.value)}
-                className="px-2 md:px-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="All">All Priority</option>
-                <option value="Critical">Critical</option>
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={filterPriority}
+                  onChange={(e) => setFilterPriority(e.target.value)}
+                  className="appearance-none w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm hover:bg-gray-50 transition-colors cursor-pointer pr-8"
+                >
+                  <option value="All">All Priority</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
               
-              <select
-                value={dueDateFilter}
-                onChange={(e) => setDueDateFilter(e.target.value)}
-                className="px-2 md:px-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 col-span-2 md:col-span-1"
-              >
-                <option value="All">All Due Dates</option>
-                <option value="Overdue">Overdue</option>
-                <option value="Today">Due Today</option>
-                <option value="This Week">This Week</option>
-                <option value="Next Week">Next Week</option>
-              </select>
+              <div className="relative col-span-2 md:col-span-1">
+                <select
+                  value={dueDateFilter}
+                  onChange={(e) => setDueDateFilter(e.target.value)}
+                  className="appearance-none w-full px-3 py-2.5 border border-gray-200 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm hover:bg-gray-50 transition-colors cursor-pointer pr-8"
+                >
+                  <option value="All">All Deadlines</option>
+                  <option value="Overdue">Overdue</option>
+                  <option value="Today">Due Today</option>
+                  <option value="This Week">This Week</option>
+                  <option value="Next Week">Next Week</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Task Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
-            <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
+            <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center">
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                  <Target className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
                 </div>
                 <div className="ml-2 md:ml-3">
                   <p className="text-xs md:text-sm text-gray-500">Total Tasks</p>
@@ -310,10 +338,10 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
               </div>
             </div>
             
-            <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
+            <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center">
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                  <CheckCircle className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
                 </div>
                 <div className="ml-2 md:ml-3">
                   <p className="text-xs md:text-sm text-gray-500">Completed</p>
@@ -322,10 +350,10 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
               </div>
             </div>
             
-            <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
+            <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center">
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Flag className="w-4 h-4 md:w-6 md:h-6 text-yellow-600" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-yellow-100 to-yellow-200 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-yellow-600" />
                 </div>
                 <div className="ml-2 md:ml-3">
                   <p className="text-xs md:text-sm text-gray-500">In Progress</p>
@@ -334,13 +362,13 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
               </div>
             </div>
             
-            <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
+            <div className="bg-white p-3 md:p-4 rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center">
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
                   <Clock className="w-4 h-4 md:w-6 md:h-6 text-red-600" />
                 </div>
                 <div className="ml-2 md:ml-3">
-                  <p className="text-xs md:text-sm text-gray-500">Overdue</p>
+                  <p className="text-xs md:text-sm text-gray-500">Needs Attention</p>
                   <p className="text-lg md:text-2xl font-bold text-gray-900">
                     {tasks.filter(t => {
                       const dueDate = new Date(t.dueDate);
@@ -359,12 +387,12 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
           <div className="px-4 md:px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-base md:text-lg font-semibold text-gray-900">
-                Tasks ({filteredTasks.length})
+                Your Tasks ({filteredTasks.length})
               </h3>
               <div className="flex items-center space-x-2">
-                <button className="flex items-center px-2 md:px-3 py-1 text-xs md:text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                <button className="flex items-center px-3 py-2 text-xs md:text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
                   <Filter className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                  Filter
+                  Quick Filter
                 </button>
               </div>
             </div>
@@ -373,15 +401,27 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
           {/* Mobile Card View */}
           <div className="md:hidden">
             {sortedTasks.length === 0 ? (
-              <div className="py-8 px-4 text-center">
+              <div className="py-12 px-4 text-center">
                 <div className="text-gray-500">
-                  <p className="text-lg font-medium">No tasks found</p>
-                  <p className="text-sm">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Target className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <p className="text-lg font-semibold text-gray-900 mb-2">Ready to make progress?</p>
+                  <p className="text-sm text-gray-600">
                     {searchQuery || filterStatus !== 'All' || filterPriority !== 'All'
-                      ? 'Try adjusting your filters or search query.'
-                      : 'Create your first task to get started.'
+                      ? 'Try adjusting your filters to find what you\'re looking for.'
+                      : 'Create your first task and start building momentum.'
                     }
                   </p>
+                  {(!searchQuery && filterStatus === 'All' && filterPriority === 'All') && (
+                    <button 
+                      onClick={handleAddTask}
+                      className="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+                    >
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      Create your first task
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
@@ -420,27 +460,28 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                         
                         {/* Status and Due Date Badge */}
                         <div className="flex items-center justify-between">
-                          <select
-                            value={task.status}
-                            onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                            className={`text-xs px-2 py-1 rounded-full border-none outline-none cursor-pointer ${task.statusColor}`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                            <option value="On Hold">On Hold</option>
-                          </select>
+                          <div className="relative">
+                            <select
+                              value={task.status}
+                              onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                              className={`appearance-none text-xs px-2 py-1 pr-6 rounded-full border-none outline-none cursor-pointer ${task.statusColor} shadow-sm`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Completed">Completed</option>
+                              <option value="On Hold">On Hold</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-0 flex items-center px-1 pointer-events-none">
+                              <svg className="w-2 h-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </div>
                           
                           <div className={`text-xs px-2 py-1 rounded-full ${getDaysRemaining(task.dueDate).bgColor} ${getDaysRemaining(task.dueDate).color}`}>
                             {getDaysRemaining(task.dueDate).text}
                           </div>
-                        </div>
-                        
-                        {/* Comments and Files */}
-                        <div className="flex items-center text-xs text-gray-500 space-x-4">
-                          <span>💬 {task.comments}</span>
-                          <span>📎 {task.files}</span>
                         </div>
                       </div>
                     </div>
@@ -462,13 +503,13 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                     Project
                   </th>
                   <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Assignee
+                    ASSIGNEE
                   </th>
                   <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Priority
                   </th>
                   <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Due Date
+                    Deadline
                   </th>
                   <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -481,15 +522,27 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
               <tbody className="divide-y divide-gray-200">
                 {sortedTasks.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 px-6 text-center">
+                    <td colSpan={7} className="py-12 px-6 text-center">
                       <div className="text-gray-500">
-                        <p className="text-lg font-medium">No tasks found</p>
-                        <p className="text-sm">
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                          <Target className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <p className="text-lg font-semibold text-gray-900 mb-2">Ready to make progress?</p>
+                        <p className="text-sm text-gray-600 mb-4">
                           {searchQuery || filterStatus !== 'All' || filterPriority !== 'All'
-                            ? 'Try adjusting your filters or search query.'
-                            : 'Create your first task to get started.'
+                            ? 'Try adjusting your filters to find what you\'re looking for.'
+                            : 'Create your first task and start building momentum.'
                           }
                         </p>
+                        {(!searchQuery && filterStatus === 'All' && filterPriority === 'All') && (
+                          <button 
+                            onClick={handleAddTask}
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+                          >
+                            <Sparkles className="w-4 h-4 mr-1" />
+                            Create your first task
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -502,8 +555,8 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                       <td className="py-4 px-6">
                         <div className="flex items-center">
                           <div className="mr-3">
-                            <div className="w-6 h-6 bg-gray-100 rounded flex items-center justify-center">
-                              <span className="text-xs text-gray-600">📋</span>
+                            <div className="w-6 h-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                              <Target className="w-3 h-3 text-blue-600" />
                             </div>
                           </div>
                           <div>
@@ -512,10 +565,6 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                               onClick={() => handleTaskClick(task)}
                             >
                               {task.name}
-                            </div>
-                            <div className="flex items-center mt-1 text-xs text-gray-500">
-                              <span className="mr-3">💬 {task.comments}</span>
-                              <span>📎 {task.files}</span>
                             </div>
                           </div>
                         </div>
@@ -547,23 +596,30 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <select
-                          value={task.status}
-                          onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-none outline-none cursor-pointer ${task.statusColor}`}
-                        >
-                          <option value="Pending">Pending</option>
-                          <option value="In Progress">In Progress</option>
-                          <option value="Completed">Completed</option>
-                          <option value="On Hold">On Hold</option>
-                        </select>
+                        <div className="relative">
+                          <select
+                            value={task.status}
+                            onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                            className={`appearance-none inline-flex items-center px-2.5 py-0.5 pr-6 rounded-full text-xs font-medium border-none outline-none cursor-pointer ${task.statusColor} shadow-sm`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="On Hold">On Hold</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center px-1 pointer-events-none">
+                            <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
+                        </div>
                       </td>
                       <td className="py-4 px-6">
                         <button
                           onClick={() => handleTaskClick(task)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                         >
-                          View
+                          View Details
                         </button>
                       </td>
                     </tr>

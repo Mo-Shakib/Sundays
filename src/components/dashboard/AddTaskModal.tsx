@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Calendar, Tag } from 'lucide-react';
+import { X, Plus, Calendar, Tag, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 interface AddTaskModalProps {
@@ -190,12 +190,12 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Plus className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </div>
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-gray-900">Create New Task</h2>
-              <p className="text-xs md:text-sm text-gray-500">Add a new task to your project</p>
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">Create Something Amazing</h2>
+              <p className="text-xs md:text-sm text-gray-500">Turn your ideas into actionable tasks</p>
             </div>
           </div>
           <button
@@ -210,23 +210,24 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
         <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 md:space-y-6">
           {/* No Projects Warning */}
           {activeProjects.length === 0 && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
               <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-yellow-600 text-sm font-bold">!</span>
+                <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-white text-sm font-bold">💡</span>
                 </div>
                 <div>
-                  <h3 className="font-medium text-yellow-800">No Projects Available</h3>
+                  <h3 className="font-semibold text-yellow-800">Ready to Start Your First Project?</h3>
                   <p className="text-sm text-yellow-700 mt-1">
-                    You need to create at least one project before you can create tasks. 
-                    Projects help organize your work and provide context for your tasks.
+                    Every great achievement starts with a well-organized project! 
+                    Create your first project to begin organizing your tasks and turning your vision into reality.
                   </p>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="mt-3 text-sm font-medium text-yellow-800 hover:text-yellow-900 underline"
+                    className="mt-3 inline-flex items-center text-sm font-medium text-yellow-800 hover:text-yellow-900 underline decoration-2 underline-offset-2"
                   >
-                    Go back and create a project first
+                    <Plus className="w-4 h-4 mr-1" />
+                    Let's create your first project
                   </button>
                 </div>
               </div>
@@ -235,7 +236,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
 
           {/* General Error */}
           {errors.general && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl">
               <p className="text-sm text-red-600">{errors.general}</p>
             </div>
           )}
@@ -243,63 +244,70 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
           {/* Task Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Task Name <span className="text-red-500">*</span>
+              What needs to be done? <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={newTask.name}
               disabled={activeProjects.length === 0}
               onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base ${
-                errors.name ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base shadow-sm hover:bg-gray-50 transition-colors ${
+                errors.name ? 'border-red-300' : 'border-gray-200'
               } ${activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-              placeholder="Enter task name"
+              placeholder="e.g., Design the homepage mockup"
             />
             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Additional Details</label>
             <textarea
               value={newTask.description}
               disabled={activeProjects.length === 0}
               onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
               rows={3}
-              className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base ${
+              className={`w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base shadow-sm hover:bg-gray-50 transition-colors resize-none ${
                 activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''
               }`}
-              placeholder="Enter task description"
+              placeholder="Add any extra context, requirements, or notes that will help complete this task..."
             />
           </div>
 
           {/* Project Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Project <span className="text-red-500">*</span>
+              Which project does this belong to? <span className="text-red-500">*</span>
             </label>
-            <select
-              value={newTask.projectId}
-              disabled={activeProjects.length === 0}
-              onChange={(e) => setNewTask({ ...newTask, projectId: e.target.value })}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base ${
-                errors.projectId ? 'border-red-300' : 'border-gray-300'
-              } ${activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-            >
-              <option value="">{activeProjects.length === 0 ? 'No projects available' : 'Select a project'}</option>
-              {activeProjects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={newTask.projectId}
+                disabled={activeProjects.length === 0}
+                onChange={(e) => setNewTask({ ...newTask, projectId: e.target.value })}
+                className={`appearance-none w-full px-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base shadow-sm hover:bg-gray-50 transition-colors cursor-pointer pr-10 ${
+                  errors.projectId ? 'border-red-300' : 'border-gray-200'
+                } ${activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+              >
+                <option value="">{activeProjects.length === 0 ? 'No projects available' : 'Choose your project'}</option>
+                {activeProjects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
             {errors.projectId && <p className="mt-1 text-sm text-red-600">{errors.projectId}</p>}
           </div>
 
           {/* Due Date with Presets */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Due Date <span className="text-red-500">*</span>
+              When should this be completed? <span className="text-red-500">*</span>
             </label>
             
             {/* Quick Date Presets */}
@@ -310,10 +318,10 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
                   type="button"
                   onClick={() => setDueDate(preset.value)}
                   disabled={activeProjects.length === 0}
-                  className={`p-2 text-xs md:text-sm rounded-lg border transition-all ${
+                  className={`p-2.5 text-xs md:text-sm rounded-xl border transition-all shadow-sm ${
                     newTask.dueDate === preset.value
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-blue-100'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                   } ${activeProjects.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className="font-medium">{preset.label}</div>
@@ -330,8 +338,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
                 value={newTask.dueDate}
                 disabled={activeProjects.length === 0}
                 onChange={(e) => setDueDate(e.target.value)}
-                className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base ${
-                  errors.dueDate ? 'border-red-300' : 'border-gray-300'
+                className={`w-full pl-10 pr-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base shadow-sm hover:bg-gray-50 transition-colors ${
+                  errors.dueDate ? 'border-red-300' : 'border-gray-200'
                 } ${activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
               />
             </div>
@@ -342,57 +350,71 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             {/* Status */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-              <select
-                value={newTask.status}
-                disabled={activeProjects.length === 0}
-                onChange={(e) => updateStatus(e.target.value)}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base ${
-                  activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''
-                }`}
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.value}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Current Status</label>
+              <div className="relative">
+                <select
+                  value={newTask.status}
+                  disabled={activeProjects.length === 0}
+                  onChange={(e) => updateStatus(e.target.value)}
+                  className={`appearance-none w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base shadow-sm hover:bg-gray-50 transition-colors cursor-pointer pr-10 ${
+                    activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {statusOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.value}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
 
             {/* Priority */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-              <select
-                value={newTask.priority}
-                disabled={activeProjects.length === 0}
-                onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base ${
-                  activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''
-                }`}
-              >
-                {priorityOptions.map((priority) => (
-                  <option key={priority} value={priority}>
-                    {priority}
-                  </option>
-                ))}
-              </select>
+              <label className="block text-sm font-medium text-gray-700 mb-2">How important is this?</label>
+              <div className="relative">
+                <select
+                  value={newTask.priority}
+                  disabled={activeProjects.length === 0}
+                  onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                  className={`appearance-none w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base shadow-sm hover:bg-gray-50 transition-colors cursor-pointer pr-10 ${
+                    activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {priorityOptions.map((priority) => (
+                    <option key={priority} value={priority}>
+                      {priority} Priority
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Assignee */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Assignee <span className="text-red-500">*</span>
+              Who's taking ownership of this? <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={newTask.assignee}
               disabled={activeProjects.length === 0}
               onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base ${
-                errors.assignee ? 'border-red-300' : 'border-gray-300'
+              className={`w-full px-3 py-2.5 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base shadow-sm hover:bg-gray-50 transition-colors ${
+                errors.assignee ? 'border-red-300' : 'border-gray-200'
               } ${activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-              placeholder="Enter assignee name"
+              placeholder="Enter the champion for this task"
             />
             {errors.assignee && <p className="mt-1 text-sm text-red-600">{errors.assignee}</p>}
           </div>
@@ -401,7 +423,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               <Tag className="inline w-4 h-4 mr-1" />
-              Tags
+              Add Tags (Optional)
             </label>
             
             {/* Tag Input */}
@@ -413,17 +435,17 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
                   disabled={activeProjects.length === 0}
                   onChange={(e) => setCurrentTag(e.target.value)}
                   onKeyPress={handleTagKeyPress}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base ${
+                  className={`w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base shadow-sm hover:bg-gray-50 transition-colors ${
                     activeProjects.length === 0 ? 'bg-gray-100 cursor-not-allowed' : ''
                   }`}
-                  placeholder="Enter tag and press Enter or comma"
+                  placeholder="e.g., urgent, frontend, research"
                 />
               </div>
               <button
                 type="button"
                 onClick={addTag}
                 disabled={activeProjects.length === 0 || !currentTag.trim()}
-                className="px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2.5 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
                 Add
               </button>
@@ -431,17 +453,17 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
 
             {/* Display Tags */}
             {newTask.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-2">
                 {newTask.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 bg-blue-100 rounded-full"
+                    className="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-full shadow-sm"
                   >
                     {tag}
                     <button
                       type="button"
                       onClick={() => removeTag(tag)}
-                      className="ml-1 text-blue-600 hover:text-blue-800"
+                      className="ml-2 text-blue-600 hover:text-blue-800 transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -450,8 +472,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
               </div>
             )}
             
-            <p className="text-xs text-gray-500 mt-1">
-              Press Enter or comma to add tags. Click × to remove.
+            <p className="text-xs text-gray-500">
+              Tags help you organize and find tasks quickly. Press Enter or comma to add.
             </p>
           </div>
 
@@ -460,20 +482,23 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ onSave, onClose, projects }
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
             >
-              Cancel
+              Maybe Later
             </button>
             <button
               type="submit"
               disabled={activeProjects.length === 0}
-              className={`w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+              className={`w-full sm:w-auto px-6 py-2.5 text-sm font-medium rounded-xl transition-all shadow-sm ${
                 activeProjects.length === 0
                   ? 'text-gray-500 bg-gray-300 cursor-not-allowed'
-                  : 'text-white bg-blue-600 hover:bg-blue-700'
+                  : 'text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-blue-200'
               }`}
             >
-              Create Task
+              <span className="flex items-center">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Create Task
+              </span>
             </button>
           </div>
         </form>
