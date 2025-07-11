@@ -1,6 +1,7 @@
 import React from 'react';
 import { Menu, Bell, Search, User, ChevronDown, Plus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import NotificationPopup from './NotificationPopup';
 
 interface HeaderProps {
@@ -13,6 +14,10 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
   const [showUserDropdown, setShowUserDropdown] = React.useState(false);
   const [showMobileSearch, setShowMobileSearch] = React.useState(false);
   const { user, logout } = useAuth();
+  const { state: notificationState } = useNotifications();
+
+  // Count unread notifications
+  const unreadCount = notificationState.notifications.filter(n => !n.isRead).length;
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
@@ -61,9 +66,13 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
               onClick={() => setShowNotifications(!showNotifications)}
             >
               <Bell className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-xs">
-                <span className="text-xs text-white font-medium">3</span>
-              </span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-xs">
+                  <span className="text-xs text-white font-medium">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                </span>
+              )}
             </button>
           </div>
           
