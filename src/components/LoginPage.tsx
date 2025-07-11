@@ -60,7 +60,7 @@ const LoginPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8">
+          <Link to="/landing" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to home
           </Link>

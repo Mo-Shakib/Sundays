@@ -166,10 +166,10 @@ const LandingPage = () => {
                 </div>
                 <span className="ml-2 text-xl font-bold text-gray-900">Sundays</span>
               </div>
-              <div className="hidden md:block ml-10">
-                <div className="flex items-baseline space-x-8">
-                  <a href="#features" className="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Features</a>
-                  <a href="#pricing" className="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Pricing</a>
+              <div className="hidden md:flex md:items-center md:space-x-6">
+                <div className="flex items-center space-x-6">
+                  <Link to="/landing" className="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Home</Link>
+                  <Link to="/features" className="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Features</Link>
                   <Link to="/about" className="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">About</Link>
                   <Link to="/contact" className="text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Contact</Link>
                 </div>
