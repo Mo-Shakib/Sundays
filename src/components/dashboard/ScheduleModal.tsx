@@ -12,11 +12,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
     title: '',
     startTime: '',
     endTime: '',
-    type: 'meeting',
+    type: 'meeting' as 'meeting' | 'task',
     description: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.title || !formData.startTime || !formData.endTime) {
@@ -24,24 +25,29 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
       return;
     }
 
-    const scheduleItem = {
-      title: formData.title,
-      time: `${formatTime(formData.startTime)} to ${formatTime(formData.endTime)}`,
-      type: formData.type,
-      description: formData.description,
-      startTime: formData.startTime,
-      endTime: formData.endTime
-    };
+    // Validate end time is after start time
+    if (formData.endTime <= formData.startTime) {
+      alert('End time must be after start time');
+      return;
+    }
 
-    onSave(scheduleItem);
-  };
+    setIsSubmitting(true);
 
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour.toString().padStart(2, '0')}:${minutes} ${ampm}`;
+    try {
+      const scheduleItem = {
+        title: formData.title,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        type: formData.type,
+        description: formData.description
+      };
+
+      await onSave(scheduleItem);
+    } catch (error) {
+      console.error('Error saving schedule item:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -63,6 +69,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            disabled={isSubmitting}
           >
             <X className="w-5 h-5 text-gray-400" />
           </button>
@@ -82,6 +89,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
               placeholder="Enter event title"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -94,11 +102,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, type: 'meeting' })}
+                disabled={isSubmitting}
                 className={`p-3 rounded-lg border-2 transition-all text-sm font-medium ${
                   formData.type === 'meeting'
                     ? 'border-purple-500 bg-purple-50 text-purple-700'
                     : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
+                } disabled:opacity-50`}
               >
                 <Users className="w-4 h-4 mx-auto mb-1" />
                 Meeting
@@ -106,11 +115,12 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, type: 'task' })}
+                disabled={isSubmitting}
                 className={`p-3 rounded-lg border-2 transition-all text-sm font-medium ${
                   formData.type === 'task'
                     ? 'border-green-500 bg-green-50 text-green-700'
                     : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                }`}
+                } disabled:opacity-50`}
               >
                 <Calendar className="w-4 h-4 mx-auto mb-1" />
                 Task
@@ -132,6 +142,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
                   onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -147,6 +158,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
                   onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                   className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -163,6 +175,7 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
               placeholder="Add a description (optional)"
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              disabled={isSubmitting}
             />
           </div>
 
@@ -172,14 +185,16 @@ const ScheduleModal: React.FC<ScheduleModalProps> = ({ selectedDate, onSave, onC
               type="button"
               onClick={onClose}
               className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSubmitting}
             >
-              Add Event
+              {isSubmitting ? 'Adding...' : 'Add Event'}
             </button>
           </div>
         </form>
