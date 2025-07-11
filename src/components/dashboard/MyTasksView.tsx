@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Filter, Search, Calendar, Flag, User, Clock, Sparkles, Target, TrendingUp, CheckCircle } from 'lucide-react';
+import { Filter, Search, Clock, Sparkles, Target, TrendingUp, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
@@ -22,7 +22,6 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
   onDeleteTask,
   onNavigateToProjects
 }) => {
-  const { user } = useAuth();
   const [selectedTask, setSelectedTask] = useState(null);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
@@ -94,17 +93,6 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
     return matchesStatus && matchesPriority && matchesSearch && matchesDueDate && matchesTimeFilter;
   });
 
-  // Sort tasks by status priority (Pending first, Completed last)
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const statusPriority = {
-      'Pending': 1,
-      'In Progress': 2,
-      'On Hold': 3,
-      'Completed': 4
-    };
-    return statusPriority[a.status] - statusPriority[b.status];
-  });
-
   // Calculate days remaining for a task
   const getDaysRemaining = (dueDate: string) => {
     if (!dueDate) {
@@ -141,7 +129,7 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
     return project ? project.name : 'Unknown Project';
   };
 
-  const handleTaskClick = (task) => {
+  const handleTaskClick = (task: any) => {
     setSelectedTask(task);
     setShowTaskModal(true);
   };
@@ -160,18 +148,19 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
     setShowNoProjectsModal(false);
     onNavigateToProjects();
   };
-  const handleSaveTask = (updatedTask) => {
+  
+  const handleSaveTask = (updatedTask: any) => {
     onUpdateTask(updatedTask);
     setShowTaskModal(false);
     setSelectedTask(null);
   };
 
-  const handleCreateTask = (newTask) => {
+  const handleCreateTask = (newTask: any) => {
     onAddTask(newTask);
     setShowAddTaskModal(false);
   };
 
-  const handleDeleteTask = (taskId) => {
+  const handleDeleteTask = (taskId: number) => {
     onDeleteTask(taskId);
     setShowTaskModal(false);
     setSelectedTask(null);
@@ -211,6 +200,298 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
         return 'text-gray-600 bg-gray-50';
     }
   };
+
+  // Group tasks by status with proper ordering
+  const groupTasksByStatus = (tasks: any[]) => {
+    const today = new Date();
+    
+    // Separate overdue tasks first
+    const overdueTasks = tasks.filter(task => {
+      const dueDate = new Date(task.dueDate);
+      return dueDate < today && task.status !== 'Completed';
+    });
+
+    // Group remaining tasks by status
+    const taskGroups = {
+      overdue: overdueTasks,
+      pending: tasks.filter(task => {
+        const dueDate = new Date(task.dueDate);
+        return task.status === 'Pending' && dueDate >= today;
+      }),
+      inProgress: tasks.filter(task => task.status === 'In Progress'),
+      onHold: tasks.filter(task => task.status === 'On Hold'),
+      completed: tasks.filter(task => task.status === 'Completed')
+    };
+
+    return taskGroups;
+  };
+
+  const taskGroups = groupTasksByStatus(filteredTasks);
+
+  // Get section styling based on status
+  const getSectionStyle = (status: string) => {
+    switch (status) {
+      case 'overdue':
+        return {
+          headerBg: 'bg-red-50 border-red-200',
+          headerText: 'text-red-800',
+          icon: '🚨',
+          title: 'Overdue Tasks',
+          description: 'Needs immediate attention'
+        };
+      case 'pending':
+        return {
+          headerBg: 'bg-purple-50 border-purple-200',
+          headerText: 'text-purple-800',
+          icon: '⏳',
+          title: 'Pending Tasks',
+          description: 'Ready to start'
+        };
+      case 'inProgress':
+        return {
+          headerBg: 'bg-green-50 border-green-200',
+          headerText: 'text-green-800',
+          icon: '🚀',
+          title: 'In Progress',
+          description: 'Currently working on'
+        };
+      case 'onHold':
+        return {
+          headerBg: 'bg-yellow-50 border-yellow-200',
+          headerText: 'text-yellow-800',
+          icon: '⏸️',
+          title: 'On Hold',
+          description: 'Temporarily paused'
+        };
+      case 'completed':
+        return {
+          headerBg: 'bg-blue-50 border-blue-200',
+          headerText: 'text-blue-800',
+          icon: '✅',
+          title: 'Completed Tasks',
+          description: 'Successfully finished'
+        };
+      default:
+        return {
+          headerBg: 'bg-gray-50 border-gray-200',
+          headerText: 'text-gray-800',
+          icon: '📋',
+          title: 'Other Tasks',
+          description: ''
+        };
+    }
+  };
+
+  // Render task section for mobile view
+  const renderMobileTaskSection = (sectionKey: string, tasks: any[]) => {
+    if (tasks.length === 0) return null;
+    
+    const style = getSectionStyle(sectionKey);
+    
+    return (
+      <div key={sectionKey} className="mb-6">
+        {/* Section Header */}
+        <div className={`px-4 py-3 ${style.headerBg} border rounded-t-xl`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">{style.icon}</span>
+              <div>
+                <h4 className={`font-semibold text-sm ${style.headerText}`}>
+                  {style.title} ({tasks.length})
+                </h4>
+                {style.description && (
+                  <p className={`text-xs ${style.headerText} opacity-75`}>
+                    {style.description}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Tasks */}
+        <div className="bg-white border-l border-r border-b rounded-b-xl divide-y divide-gray-200">
+          {tasks.map((task) => (
+            <div key={task.id} className="p-4 hover:bg-gray-50 transition-colors">
+              <div 
+                className="cursor-pointer"
+                onClick={() => handleTaskClick(task)}
+              >
+                {/* Task Header */}
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 text-sm">{task.name}</h4>
+                    <p className="text-xs text-gray-500 mt-1">{getProjectName(task.projectId)}</p>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)} ml-2`}>
+                    {task.priority}
+                  </span>
+                </div>
+                
+                {/* Task Details */}
+                <div className="space-y-2">
+                  {/* Assignee and Due Date */}
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium ${task.avatarColor}`}>
+                        {task.avatar}
+                      </div>
+                      <span className="ml-2 text-gray-600">{task.assignee}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-gray-900">{new Date(task.dueDate).toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                  
+                  {/* Status and Due Date Badge */}
+                  <div className="flex items-center justify-between">
+                    <div className="relative">
+                      <select
+                        value={task.status}
+                        onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                        className={`appearance-none text-xs px-2 py-1 pr-6 rounded-full border-none outline-none cursor-pointer ${task.statusColor} shadow-sm`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="On Hold">On Hold</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center px-1 pointer-events-none">
+                        <svg className="w-2 h-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    <div className={`text-xs px-2 py-1 rounded-full ${getDaysRemaining(task.dueDate).bgColor} ${getDaysRemaining(task.dueDate).color}`}>
+                      {getDaysRemaining(task.dueDate).text}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Render task section for desktop view
+  const renderDesktopTaskSection = (sectionKey: string, tasks: any[]) => {
+    if (tasks.length === 0) return null;
+    
+    const style = getSectionStyle(sectionKey);
+    
+    return (
+      <div key={sectionKey} className="mb-6">
+        {/* Section Header */}
+        <div className={`px-6 py-3 ${style.headerBg} border rounded-t-xl`}>
+          <div className="flex items-center space-x-2">
+            <span className="text-lg">{style.icon}</span>
+            <div>
+              <h4 className={`font-semibold text-sm ${style.headerText}`}>
+                {style.title} ({tasks.length})
+              </h4>
+              {style.description && (
+                <p className={`text-xs ${style.headerText} opacity-75`}>
+                  {style.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Tasks Table */}
+        <div className="bg-white border-l border-r border-b rounded-b-xl overflow-hidden">
+          <table className="w-full">
+            <tbody className="divide-y divide-gray-200">
+              {tasks.map((task) => (
+                <tr 
+                  key={task.id} 
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <td className="py-4 px-6">
+                    <div className="flex items-center">
+                      <div className="mr-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                          <Target className="w-3 h-3 text-blue-600" />
+                        </div>
+                      </div>
+                      <div>
+                        <div 
+                          className="font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
+                          onClick={() => handleTaskClick(task)}
+                        >
+                          {task.name}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className="text-sm text-gray-600">{getProjectName(task.projectId)}</span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${task.avatarColor}`}>
+                        {task.avatar}
+                      </div>
+                      <div className="ml-3">
+                        <div className="text-sm font-medium text-gray-900">{task.assignee}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
+                      {task.priority}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div>
+                      <div className="text-sm text-gray-900">{new Date(task.dueDate).toLocaleDateString()}</div>
+                      <div className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${getDaysRemaining(task.dueDate).bgColor} ${getDaysRemaining(task.dueDate).color}`}>
+                        {getDaysRemaining(task.dueDate).text}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="relative">
+                      <select
+                        value={task.status}
+                        onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                        className={`appearance-none inline-flex items-center px-2.5 py-0.5 pr-6 rounded-full text-xs font-medium border-none outline-none cursor-pointer ${task.statusColor} shadow-sm`}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="On Hold">On Hold</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center px-1 pointer-events-none">
+                        <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <button
+                      onClick={() => handleTaskClick(task)}
+                      className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  // Check if we have any tasks to display
+  const totalFilteredTasks = Object.values(taskGroups).flat().length;
 
   return (
     <>
@@ -388,7 +669,7 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
           <div className="px-4 md:px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h3 className="text-base md:text-lg font-semibold text-gray-900">
-                Your Tasks ({filteredTasks.length})
+                Your Tasks ({totalFilteredTasks})
               </h3>
               <div className="flex items-center space-x-2">
                 <button className="flex items-center px-3 py-2 text-xs md:text-sm text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
@@ -400,8 +681,8 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
           </div>
           
           {/* Mobile Card View */}
-          <div className="md:hidden">
-            {sortedTasks.length === 0 ? (
+          <div className="md:hidden p-4">
+            {totalFilteredTasks === 0 ? (
               <div className="py-12 px-4 text-center">
                 <div className="text-gray-500">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -426,208 +707,66 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                 </div>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
-                {sortedTasks.map((task) => (
-                  <div key={task.id} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div 
-                      className="cursor-pointer"
-                      onClick={() => handleTaskClick(task)}
-                    >
-                      {/* Task Header */}
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 text-sm">{task.name}</h4>
-                          <p className="text-xs text-gray-500 mt-1">{getProjectName(task.projectId)}</p>
-                        </div>
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)} ml-2`}>
-                          {task.priority}
-                        </span>
-                      </div>
-                      
-                      {/* Task Details */}
-                      <div className="space-y-2">
-                        {/* Assignee and Due Date */}
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium ${task.avatarColor}`}>
-                              {task.avatar}
-                            </div>
-                            <span className="ml-2 text-gray-600">{task.assignee}</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-gray-900">{new Date(task.dueDate).toLocaleDateString()}</div>
-                          </div>
-                        </div>
-                        
-                        {/* Status and Due Date Badge */}
-                        <div className="flex items-center justify-between">
-                          <div className="relative">
-                            <select
-                              value={task.status}
-                              onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                              className={`appearance-none text-xs px-2 py-1 pr-6 rounded-full border-none outline-none cursor-pointer ${task.statusColor} shadow-sm`}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="In Progress">In Progress</option>
-                              <option value="Completed">Completed</option>
-                              <option value="On Hold">On Hold</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-0 flex items-center px-1 pointer-events-none">
-                              <svg className="w-2 h-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </div>
-                          </div>
-                          
-                          <div className={`text-xs px-2 py-1 rounded-full ${getDaysRemaining(task.dueDate).bgColor} ${getDaysRemaining(task.dueDate).color}`}>
-                            {getDaysRemaining(task.dueDate).text}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-6">
+                {/* Render sections in priority order */}
+                {renderMobileTaskSection('overdue', taskGroups.overdue)}
+                {renderMobileTaskSection('pending', taskGroups.pending)}
+                {renderMobileTaskSection('inProgress', taskGroups.inProgress)}
+                {renderMobileTaskSection('onHold', taskGroups.onHold)}
+                {renderMobileTaskSection('completed', taskGroups.completed)}
               </div>
             )}
           </div>
           
           {/* Desktop Table View */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Task
-                  </th>
-                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Project
-                  </th>
-                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ASSIGNEE
-                  </th>
-                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Priority
-                  </th>
-                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Deadline
-                  </th>
-                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {sortedTasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="py-12 px-6 text-center">
-                      <div className="text-gray-500">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                          <Target className="w-8 h-8 text-blue-600" />
-                        </div>
-                        <p className="text-lg font-semibold text-gray-900 mb-2">Ready to make progress?</p>
-                        <p className="text-sm text-gray-600 mb-4">
-                          {searchQuery || filterStatus !== 'All' || filterPriority !== 'All'
-                            ? 'Try adjusting your filters to find what you\'re looking for.'
-                            : 'Create your first task and start building momentum.'
-                          }
-                        </p>
-                        {(!searchQuery && filterStatus === 'All' && filterPriority === 'All') && (
-                          <button 
-                            onClick={handleAddTask}
-                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
-                          >
-                            <Sparkles className="w-4 h-4 mr-1" />
-                            Create your first task
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  sortedTasks.map((task) => (
-                    <tr 
-                      key={task.id} 
-                      className="hover:bg-gray-50 transition-colors"
+          <div className="hidden md:block p-6">
+            {totalFilteredTasks === 0 ? (
+              <div className="py-12 px-6 text-center">
+                <div className="text-gray-500">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <Target className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <p className="text-lg font-semibold text-gray-900 mb-2">Ready to make progress?</p>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {searchQuery || filterStatus !== 'All' || filterPriority !== 'All'
+                      ? 'Try adjusting your filters to find what you\'re looking for.'
+                      : 'Create your first task and start building momentum.'
+                    }
+                  </p>
+                  {(!searchQuery && filterStatus === 'All' && filterPriority === 'All') && (
+                    <button 
+                      onClick={handleAddTask}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700"
                     >
-                      <td className="py-4 px-6">
-                        <div className="flex items-center">
-                          <div className="mr-3">
-                            <div className="w-6 h-6 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                              <Target className="w-3 h-3 text-blue-600" />
-                            </div>
-                          </div>
-                          <div>
-                            <div 
-                              className="font-medium text-gray-900 hover:text-blue-600 transition-colors cursor-pointer"
-                              onClick={() => handleTaskClick(task)}
-                            >
-                              {task.name}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="text-sm text-gray-600">{getProjectName(task.projectId)}</span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${task.avatarColor}`}>
-                            {task.avatar}
-                          </div>
-                          <div className="ml-3">
-                            <div className="text-sm font-medium text-gray-900">{task.assignee}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                          {task.priority}
-                        </span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div>
-                          <div className="text-sm text-gray-900">{new Date(task.dueDate).toLocaleDateString()}</div>
-                          <div className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${getDaysRemaining(task.dueDate).bgColor} ${getDaysRemaining(task.dueDate).color}`}>
-                            {getDaysRemaining(task.dueDate).text}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="relative">
-                          <select
-                            value={task.status}
-                            onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                            className={`appearance-none inline-flex items-center px-2.5 py-0.5 pr-6 rounded-full text-xs font-medium border-none outline-none cursor-pointer ${task.statusColor} shadow-sm`}
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                            <option value="On Hold">On Hold</option>
-                          </select>
-                          <div className="absolute inset-y-0 right-0 flex items-center px-1 pointer-events-none">
-                            <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <button
-                          onClick={() => handleTaskClick(task)}
-                          className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                        >
-                          View Details
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      <Sparkles className="w-4 h-4 mr-1" />
+                      Create your first task
+                    </button>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Table Header - only show once at the top */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="grid grid-cols-7 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="col-span-1">Task</div>
+                    <div className="col-span-1">Project</div>
+                    <div className="col-span-1">Assignee</div>
+                    <div className="col-span-1">Priority</div>
+                    <div className="col-span-1">Deadline</div>
+                    <div className="col-span-1">Status</div>
+                    <div className="col-span-1">Actions</div>
+                  </div>
+                </div>
+                
+                {/* Render sections in priority order */}
+                {renderDesktopTaskSection('overdue', taskGroups.overdue)}
+                {renderDesktopTaskSection('pending', taskGroups.pending)}
+                {renderDesktopTaskSection('inProgress', taskGroups.inProgress)}
+                {renderDesktopTaskSection('onHold', taskGroups.onHold)}
+                {renderDesktopTaskSection('completed', taskGroups.completed)}
+              </div>
+            )}
           </div>
         </div>
       </main>
