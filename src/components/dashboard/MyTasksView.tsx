@@ -213,131 +213,135 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
 
   return (
     <>
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 p-4 md:p-6 overflow-auto">
         {/* Header Section */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">My Tasks</h1>
-              <p className="text-gray-600">Manage your personal tasks and deadlines</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Tasks</h1>
+              <p className="text-gray-600 text-sm md:text-base">Manage your personal tasks and deadlines</p>
             </div>
             <button 
               onClick={handleAddTask}
-              className="flex items-center px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center justify-center px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Task
+              Add Task
             </button>
           </div>
 
           {/* Filters and Search */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
+          <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-6">
+            {/* Search Bar */}
+            <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
+                <Search className="h-4 w-4 md:h-5 md:w-5 text-gray-400" />
               </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tasks..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full pl-9 md:pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
-            <select
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="All Time">All Time</option>
-              <option value="This Week">This Week</option>
-              <option value="This Month">This Month</option>
-            </select>
-            
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="All">All Status</option>
-              <option value="Pending">Pending</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Completed">Completed</option>
-              <option value="On Hold">On Hold</option>
-            </select>
-            
-            <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="All">All Priority</option>
-              <option value="Critical">Critical</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
-            </select>
-            
-            <select
-              value={dueDateFilter}
-              onChange={(e) => setDueDateFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="All">All Due Dates</option>
-              <option value="Overdue">Overdue</option>
-              <option value="Today">Due Today</option>
-              <option value="This Week">This Week</option>
-              <option value="Next Week">Next Week</option>
-            </select>
+            {/* Filter Selects - Responsive Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-3">
+              <select
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value)}
+                className="px-2 md:px-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="All Time">All Time</option>
+                <option value="This Week">This Week</option>
+                <option value="This Month">This Month</option>
+              </select>
+              
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-2 md:px-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="All">All Status</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+                <option value="On Hold">On Hold</option>
+              </select>
+              
+              <select
+                value={filterPriority}
+                onChange={(e) => setFilterPriority(e.target.value)}
+                className="px-2 md:px-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="All">All Priority</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+              
+              <select
+                value={dueDateFilter}
+                onChange={(e) => setDueDateFilter(e.target.value)}
+                className="px-2 md:px-3 py-2 border border-gray-300 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 col-span-2 md:col-span-1"
+              >
+                <option value="All">All Due Dates</option>
+                <option value="Overdue">Overdue</option>
+                <option value="Today">Due Today</option>
+                <option value="This Week">This Week</option>
+                <option value="Next Week">Next Week</option>
+              </select>
+            </div>
           </div>
 
           {/* Task Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
+            <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-blue-600" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Clock className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-gray-500">Total Tasks</p>
-                  <p className="text-2xl font-bold text-gray-900">{tasks.length}</p>
+                <div className="ml-2 md:ml-3">
+                  <p className="text-xs md:text-sm text-gray-500">Total Tasks</p>
+                  <p className="text-lg md:text-2xl font-bold text-gray-900">{tasks.length}</p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-green-600" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-gray-500">Completed</p>
-                  <p className="text-2xl font-bold text-gray-900">{tasks.filter(t => t.status === 'Completed').length}</p>
+                <div className="ml-2 md:ml-3">
+                  <p className="text-xs md:text-sm text-gray-500">Completed</p>
+                  <p className="text-lg md:text-2xl font-bold text-gray-900">{tasks.filter(t => t.status === 'Completed').length}</p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Flag className="w-6 h-6 text-yellow-600" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <Flag className="w-4 h-4 md:w-6 md:h-6 text-yellow-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-gray-500">In Progress</p>
-                  <p className="text-2xl font-bold text-gray-900">{tasks.filter(t => t.status === 'In Progress').length}</p>
+                <div className="ml-2 md:ml-3">
+                  <p className="text-xs md:text-sm text-gray-500">In Progress</p>
+                  <p className="text-lg md:text-2xl font-bold text-gray-900">{tasks.filter(t => t.status === 'In Progress').length}</p>
                 </div>
               </div>
             </div>
             
-            <div className="bg-white p-4 rounded-lg border border-gray-200">
+            <div className="bg-white p-3 md:p-4 rounded-lg border border-gray-200">
               <div className="flex items-center">
-                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-red-600" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                  <Clock className="w-4 h-4 md:w-6 md:h-6 text-red-600" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-gray-500">Overdue</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                <div className="ml-2 md:ml-3">
+                  <p className="text-xs md:text-sm text-gray-500">Overdue</p>
+                  <p className="text-lg md:text-2xl font-bold text-gray-900">
                     {tasks.filter(t => {
                       const dueDate = new Date(t.dueDate);
                       const today = new Date();
@@ -350,23 +354,104 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
           </div>
         </div>
 
-        {/* Tasks Table */}
+        {/* Tasks - Mobile Card View / Desktop Table View */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 md:px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-base md:text-lg font-semibold text-gray-900">
                 Tasks ({filteredTasks.length})
               </h3>
               <div className="flex items-center space-x-2">
-                <button className="flex items-center px-3 py-1 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
-                  <Filter className="w-4 h-4 mr-1" />
+                <button className="flex items-center px-2 md:px-3 py-1 text-xs md:text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+                  <Filter className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                   Filter
                 </button>
               </div>
             </div>
           </div>
           
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="md:hidden">
+            {sortedTasks.length === 0 ? (
+              <div className="py-8 px-4 text-center">
+                <div className="text-gray-500">
+                  <p className="text-lg font-medium">No tasks found</p>
+                  <p className="text-sm">
+                    {searchQuery || filterStatus !== 'All' || filterPriority !== 'All'
+                      ? 'Try adjusting your filters or search query.'
+                      : 'Create your first task to get started.'
+                    }
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-200">
+                {sortedTasks.map((task) => (
+                  <div key={task.id} className="p-4 hover:bg-gray-50 transition-colors">
+                    <div 
+                      className="cursor-pointer"
+                      onClick={() => handleTaskClick(task)}
+                    >
+                      {/* Task Header */}
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-gray-900 text-sm">{task.name}</h4>
+                          <p className="text-xs text-gray-500 mt-1">{getProjectName(task.projectId)}</p>
+                        </div>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)} ml-2`}>
+                          {task.priority}
+                        </span>
+                      </div>
+                      
+                      {/* Task Details */}
+                      <div className="space-y-2">
+                        {/* Assignee and Due Date */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium ${task.avatarColor}`}>
+                              {task.avatar}
+                            </div>
+                            <span className="ml-2 text-gray-600">{task.assignee}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-gray-900">{new Date(task.dueDate).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                        
+                        {/* Status and Due Date Badge */}
+                        <div className="flex items-center justify-between">
+                          <select
+                            value={task.status}
+                            onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                            className={`text-xs px-2 py-1 rounded-full border-none outline-none cursor-pointer ${task.statusColor}`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="On Hold">On Hold</option>
+                          </select>
+                          
+                          <div className={`text-xs px-2 py-1 rounded-full ${getDaysRemaining(task.dueDate).bgColor} ${getDaysRemaining(task.dueDate).color}`}>
+                            {getDaysRemaining(task.dueDate).text}
+                          </div>
+                        </div>
+                        
+                        {/* Comments and Files */}
+                        <div className="flex items-center text-xs text-gray-500 space-x-4">
+                          <span>💬 {task.comments}</span>
+                          <span>📎 {task.files}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
