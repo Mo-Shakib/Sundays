@@ -424,6 +424,18 @@ const LandingPage = () => {
               </div>
             ))}
           </div>
+          
+          {/* View All Features Link */}
+          <div className="text-center mt-12">
+            <Link
+              to="/features"
+              className="group inline-flex items-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              <Sparkles className="w-5 h-5 mr-2 group-hover:animate-spin" />
+              View All Features
+              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -564,6 +576,65 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Learn More About Us Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-green-100 to-blue-100 text-green-800 rounded-full text-sm font-medium mb-6 border border-green-200">
+                <Heart className="w-4 h-4 mr-2" />
+                <span>Built with passion for teams</span>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                Meet the team behind <span className="text-blue-600">Sundays</span>
+              </h2>
+              <p className="text-xl text-gray-600 mb-8 leading-relaxed">
+                Discover our story, mission, and the technology that powers your productivity. Learn how we're building the future of project management.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  to="/about"
+                  className="group inline-flex items-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  <Users className="w-5 h-5 mr-2 group-hover:animate-pulse" />
+                  Learn About Us
+                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <Link
+                  to="/contact"
+                  className="group border-2 border-gray-300 hover:border-blue-500 text-gray-700 hover:text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 flex items-center justify-center hover:bg-blue-50"
+                >
+                  <MessageSquare className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                  Get in Touch
+                </Link>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-3xl p-8 border border-blue-100 shadow-xl">
+                <div className="text-center">
+                  <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4 shadow-lg">
+                    S
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Hi, I'm Shakib!</h3>
+                  <p className="text-blue-600 font-medium mb-4">Full Stack Developer</p>
+                  <p className="text-gray-600 leading-relaxed">
+                    I created Sundays because I believe teams deserve better tools. Every feature is crafted with care to help you work smarter, not harder.
+                  </p>
+                  <div className="mt-6 flex justify-center">
+                    <div className="flex space-x-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-2">Rated 4.9/5 by users worldwide</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -611,7 +682,7 @@ const LandingPage = () => {
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center">
             <p className="text-gray-400">
-              © <a href="https://innovas.ai/" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">Innovas AI</a> 2025. All rights reserved.
+              © <a href="#" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">Sundays</a> 2025. All rights reserved.
             </p>
           </div>
         </div>
