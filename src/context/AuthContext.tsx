@@ -155,40 +155,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (event === 'SIGNED_IN' && session?.user) {
         console.log('User signed in:', session.user.id);
         
-        // Wait a bit for the user to be properly created in the database
-        setTimeout(async () => {
-          const profile = await getOrCreateProfile(
-            session.user.id,
-            session.user.email || '',
-            session.user.user_metadata?.name
-          );
-          
-          if (profile) {
-            console.log('Setting user from auth change:', profile);
-            setUser({
-              id: profile.id,
-              name: profile.name,
-              email: profile.email
-            });
-          } else {
-            console.log('Failed to create/get profile, retrying...');
-            // Retry after another delay
-            setTimeout(async () => {
-              const retryProfile = await getOrCreateProfile(
-                session.user.id,
-                session.user.email || '',
-                session.user.user_metadata?.name
-              );
-              if (retryProfile) {
-                setUser({
-                  id: retryProfile.id,
-                  name: retryProfile.name,
-                  email: retryProfile.email
-                });
-              }
-            }, 2000);
-          }
-        }, 1000);
+        // Only handle this if we don't already have a user set
+        // This prevents conflicts with manual user setting in login/signup
+        if (!user) {
+          // Wait a bit for the user to be properly created in the database
+          setTimeout(async () => {
+            const profile = await getOrCreateProfile(
+              session.user.id,
+              session.user.email || '',
+              session.user.user_metadata?.name
+            );
+            
+            if (profile) {
+              console.log('Setting user from auth change:', profile);
+              setUser({
+                id: profile.id,
+                name: profile.name,
+                email: profile.email
+              });
+            } else {
+              console.log('Failed to create/get profile, retrying...');
+              // Retry after another delay
+              setTimeout(async () => {
+                const retryProfile = await getOrCreateProfile(
+                  session.user.id,
+                  session.user.email || '',
+                  session.user.user_metadata?.name
+                );
+                
+                if (retryProfile) {
+                  setUser({
+                    id: retryProfile.id,
+                    name: retryProfile.name,
+                    email: retryProfile.email
+                  });
+                }
+              }, 2000);
+            }
+          }, 1000);
+        }
       } else if (event === 'SIGNED_OUT') {
         console.log('User signed out');
         setUser(null);
@@ -230,6 +235,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (data.user) {
         console.log('Login successful for user:', data.user.id);
+        
+        // Immediately get or create the profile instead of relying on auth state change
+        const profile = await getOrCreateProfile(
+          data.user.id,
+          data.user.email || '',
+          data.user.user_metadata?.name
+        );
+        
+        if (profile) {
+          console.log('Setting user from login:', profile);
+          setUser({
+            id: profile.id,
+            name: profile.name,
+            email: profile.email
+          });
+        }
+        
         return { success: true };
       } else {
         return { success: false, error: 'Login failed. Please try again.' };
