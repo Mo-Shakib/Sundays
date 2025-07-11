@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
 import NoProjectsModal from './NoProjectsModal';
+import ScheduleModal from './ScheduleModal';
 
 interface DashboardViewProps {
   selectedProjectId: number | null;
@@ -34,12 +35,17 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showNoProjectsModal, setShowNoProjectsModal] = useState(false);
   const [timeFilter, setTimeFilter] = useState('This Week');
-
-  const [scheduleItems] = useState([
+  
+  // Schedule-related state
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleItems, setScheduleItems] = useState([
     {
       id: 1,
       title: 'Kickoff Meeting',
       time: '01:00 PM to 02:30 PM',
+      date: new Date().toISOString().split('T')[0],
+      type: 'meeting',
       attendees: [
         { name: 'John', avatar: 'J', color: 'bg-blue-500' },
         { name: 'Sarah', avatar: 'S', color: 'bg-purple-500' }
@@ -49,6 +55,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       id: 2,
       title: 'Create Wordpress website for event Registration',
       time: '04:00 PM to 02:30 PM',
+      date: new Date().toISOString().split('T')[0],
+      type: 'task',
       attendees: [
         { name: 'Mike', avatar: 'M', color: 'bg-green-500' },
         { name: 'Lisa', avatar: 'L', color: 'bg-orange-500' }
@@ -58,6 +66,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
       id: 3,
       title: 'Create User flow for hotel booking',
       time: '05:00 PM to 02:30 PM',
+      date: new Date().toISOString().split('T')[0],
+      type: 'task',
       attendees: [
         { name: 'Alex', avatar: 'A', color: 'bg-pink-500' },
         { name: 'Emma', avatar: 'E', color: 'bg-indigo-500' }
@@ -65,11 +75,90 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     }
   ]);
 
+  // Notes state
   const [notes, setNotes] = useState([
-    { id: 1, text: 'Landing Page For Website', description: 'To get started on a landing page, could you provide a bit more detail about its purpose?', completed: false },
-    { id: 2, text: 'Fixing icons with dark backgrounds', description: 'Use icons that are easily recognizable and straightforward. Avoid overly complex designs that might confuse users', completed: false },
-    { id: 3, text: 'Discussion regarding userflow improvement', description: "What's the main goal of the landing page? (e.g., lead generation, product)", completed: true }
+    {
+      id: 1,
+      text: 'Review Q4 goals',
+      description: 'Check progress on quarterly objectives',
+      completed: false
+    },
+    {
+      id: 2,
+      text: 'Update project timeline',
+      description: 'Adjust milestones based on current progress',
+      completed: true
+    },
+    {
+      id: 3,
+      text: 'Team feedback session',
+      description: 'Gather input on recent sprint',
+      completed: false
+    }
   ]);
+
+  // Generate week days based on selected date
+  const generateWeekDays = () => {
+    const today = new Date();
+    const currentWeekStart = new Date(today);
+    currentWeekStart.setDate(today.getDate() - today.getDay()); // Start from Sunday (getDay() returns 0 for Sunday)
+    
+    const weekDays = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(currentWeekStart.getDate() + i);
+      
+      const dayOfWeek = date.getDay(); // 0 = Sunday, 5 = Friday, 6 = Saturday
+      const isWeekend = dayOfWeek === 5 || dayOfWeek === 6; // Friday or Saturday
+      
+      weekDays.push({
+        day: date.toLocaleDateString('en-US', { weekday: 'short' }).substring(0, 2),
+        date: date.getDate().toString(),
+        fullDate: date.toISOString().split('T')[0],
+        active: date.toDateString() === selectedDate.toDateString(),
+        isToday: date.toDateString() === today.toDateString(),
+        isWeekend: isWeekend
+      });
+    }
+    return weekDays;
+  };
+
+  const weekDays = generateWeekDays();
+
+  // Filter schedule items by selected date
+  const getScheduleItemsForDate = (date) => {
+    const dateString = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+    return scheduleItems.filter(item => item.date === dateString);
+  };
+
+  // Handle date selection
+  const handleDateSelect = (dateString) => {
+    setSelectedDate(new Date(dateString));
+  };
+
+  // Add new schedule item
+  const handleAddScheduleItem = (newItem) => {
+    const item = {
+      id: Date.now(),
+      ...newItem,
+      date: selectedDate.toISOString().split('T')[0],
+      attendees: newItem.attendees || [{ name: user?.name || 'You', avatar: user?.name?.charAt(0) || 'U', color: 'bg-blue-500' }]
+    };
+    setScheduleItems([...scheduleItems, item]);
+    setShowScheduleModal(false);
+  };
+
+  // Delete schedule item
+  const handleDeleteScheduleItem = (itemId) => {
+    setScheduleItems(scheduleItems.filter(item => item.id !== itemId));
+  };
+
+  // Edit schedule item
+  const handleEditScheduleItem = (itemId, updatedItem) => {
+    setScheduleItems(scheduleItems.map(item => 
+      item.id === itemId ? { ...item, ...updatedItem } : item
+    ));
+  };
 
   // Calculate days remaining for a task
   const getDaysRemaining = (dueDate: string) => {
@@ -376,16 +465,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
     
     return paragraph;
   };
-
-  const weekDays = [
-    { day: 'Mo', date: '15' },
-    { day: 'Tu', date: '16' },
-    { day: 'We', date: '17', active: true },
-    { day: 'Th', date: '18' },
-    { day: 'Fr', date: '19' },
-    { day: 'Sa', date: '20' },
-    { day: 'Su', date: '14' }
-  ];
 
   // Get current date and format it
   const getCurrentDate = () => {
@@ -885,7 +964,13 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base md:text-lg font-semibold text-gray-900">Schedule</h3>
-                  <MoreHorizontal className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
+                  <button
+                    onClick={() => setShowScheduleModal(true)}
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    title="Add schedule item"
+                  >
+                    <Plus className="w-4 h-4 md:w-5 md:h-5 text-gray-400 hover:text-gray-600" />
+                  </button>
                 </div>
               </div>
               
@@ -894,36 +979,89 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="grid grid-cols-7 gap-1 mb-4 md:mb-6">
                   {weekDays.map((day, index) => (
                     <div key={index} className="text-center">
-                      <div className="text-xs text-gray-500 mb-1">{day.day}</div>
-                      <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-xs md:text-sm font-medium cursor-pointer transition-colors ${
-                        day.active 
-                          ? 'bg-purple-500 text-white' 
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}>
-                        {day.date}
+                      <div className={`text-xs mb-1 ${day.isWeekend ? 'text-green-600' : 'text-gray-500'}`}>
+                        {day.day}
                       </div>
+                      <button
+                        onClick={() => handleDateSelect(day.fullDate)}
+                        className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-xs md:text-sm font-medium transition-colors ${
+                          day.active 
+                            ? 'bg-blue-500 text-white' 
+                            : day.isToday
+                            ? 'bg-blue-100 text-blue-600 border border-blue-300'
+                            : day.isWeekend
+                            ? 'text-green-600 hover:bg-green-50'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {day.date}
+                      </button>
+                      {/* Indicator for items on this date */}
+                      {getScheduleItemsForDate(day.fullDate).length > 0 && (
+                        <div className="w-1 h-1 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                      )}
                     </div>
                   ))}
                 </div>
 
-                {/* Schedule Items */}
+                {/* Selected Date Display */}
+                <div className="mb-3 text-center">
+                  <p className="text-sm text-gray-600">
+                    {selectedDate.toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+
+                {/* Schedule Items for Selected Date */}
                 <div className="space-y-3 md:space-y-4">
-                  {scheduleItems.map((item) => (
-                    <div key={item.id} className="border-l-4 border-blue-500 pl-3 md:pl-4 cursor-pointer hover:bg-gray-50 p-2 rounded-r transition-colors">
-                      <h4 className="font-medium text-gray-900 text-sm">{item.title}</h4>
-                      <p className="text-xs text-gray-500 mt-1">{item.time}</p>
-                      <div className="flex items-center mt-2">
-                        <div className="flex -space-x-1">
-                          {item.attendees.map((attendee, index) => (
-                            <div key={index} className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white ${attendee.color}`}>
-                              {attendee.avatar}
-                            </div>
-                          ))}
-                        </div>
-                        <MoreHorizontal className="w-3 h-3 md:w-4 md:h-4 text-gray-400 ml-2" />
-                      </div>
+                  {getScheduleItemsForDate(selectedDate).length === 0 ? (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-gray-500">No events scheduled for this day</p>
+                      <button
+                        onClick={() => setShowScheduleModal(true)}
+                        className="mt-2 text-xs text-blue-600 hover:text-blue-700"
+                      >
+                        Add an event
+                      </button>
                     </div>
-                  ))}
+                  ) : (
+                    getScheduleItemsForDate(selectedDate).map((item) => (
+                      <div key={item.id} className="border-l-4 border-blue-500 pl-3 md:pl-4 hover:bg-gray-50 p-2 rounded-r transition-colors group">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-gray-900 text-sm truncate">{item.title}</h4>
+                            <p className="text-xs text-gray-500 mt-1">{item.time}</p>
+                            <div className="flex items-center mt-2">
+                              <div className="flex -space-x-1">
+                                {item.attendees.map((attendee, index) => (
+                                  <div key={index} className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white ${attendee.color}`}>
+                                    {attendee.avatar}
+                                  </div>
+                                ))}
+                              </div>
+                              <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                                item.type === 'meeting' ? 'bg-purple-100 text-purple-600' : 'bg-green-100 text-green-600'
+                              }`}>
+                                {item.type}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteScheduleItem(item.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all"
+                            title="Delete event"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
@@ -996,6 +1134,15 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         <NoProjectsModal
           onClose={() => setShowNoProjectsModal(false)}
           onCreateProject={handleCreateProjectFromModal}
+        />
+      )}
+
+      {/* Schedule Modal */}
+      {showScheduleModal && (
+        <ScheduleModal
+          selectedDate={selectedDate}
+          onSave={handleAddScheduleItem}
+          onClose={() => setShowScheduleModal(false)}
         />
       )}
     </>
