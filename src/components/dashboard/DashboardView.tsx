@@ -434,69 +434,69 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
   return (
     <>
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 p-4 md:p-6 overflow-auto">
         {/* Header Section */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-3 sm:space-y-0">
             <div>
-              <p className="text-sm text-gray-500">{getCurrentDate()}</p>
-              <h1 className="text-3xl font-bold text-gray-900">{getGreeting()} {user?.name?.split(' ')[0]},</h1>
+              <p className="text-xs md:text-sm text-gray-500">{getCurrentDate()}</p>
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900">{getGreeting()} {user?.name?.split(' ')[0]},</h1>
               {selectedProjectId && (
-                <p className="text-lg text-blue-600 mt-1">Viewing: {selectedProjectName}</p>
+                <p className="text-sm md:text-lg text-blue-600 mt-1">Viewing: {selectedProjectName}</p>
               )}
             </div>
-            <div className="flex items-center space-x-3">
-              <button className="hidden sm:flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+              <button className="hidden md:flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Share className="w-4 h-4 mr-2" />
                 Share
               </button>
               <button 
                 onClick={handleAddTask}
-                className="flex items-center px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center justify-center px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Task
+                Add Task
               </button>
             </div>
           </div>
 
           {/* Inspiring Message */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
-            <p className="text-blue-800 font-medium text-center">{getInspiringMessage()}</p>
+          <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+            <p className="text-blue-800 font-medium text-center text-sm md:text-base">{getInspiringMessage()}</p>
           </div>
 
           {/* Progress Paragraph */}
-          <div className="mb-6">
-            <p className="text-gray-600 leading-relaxed">{getProgressParagraph()}</p>
+          <div className="mb-4 md:mb-6">
+            <p className="text-gray-600 leading-relaxed text-sm md:text-base">{getProgressParagraph()}</p>
           </div>
 
-          {/* Enhanced Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Enhanced Stats Grid - Mobile Optimized */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
             {/* Productivity Score */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Productivity Score</p>
-                  <p className={`text-2xl font-bold ${
+                  <p className="text-xs md:text-sm text-gray-500">Productivity Score</p>
+                  <p className={`text-lg md:text-2xl font-bold ${
                     stats.productivityScore >= 80 ? 'text-green-600' :
                     stats.productivityScore >= 60 ? 'text-yellow-600' : 'text-red-600'
                   }`}>
                     {stats.productivityScore}
                   </p>
                 </div>
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center ${
                   stats.productivityScore >= 80 ? 'bg-green-100' :
                   stats.productivityScore >= 60 ? 'bg-yellow-100' : 'bg-red-100'
                 }`}>
-                  <Target className={`w-6 h-6 ${
+                  <Target className={`w-4 h-4 md:w-6 md:h-6 ${
                     stats.productivityScore >= 80 ? 'text-green-600' :
                     stats.productivityScore >= 60 ? 'text-yellow-600' : 'text-red-600'
                   }`} />
                 </div>
               </div>
-              <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+              <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5 md:h-2">
                 <div 
-                  className={`h-2 rounded-full transition-all duration-500 ${
+                  className={`h-1.5 md:h-2 rounded-full transition-all duration-500 ${
                     stats.productivityScore >= 80 ? 'bg-green-500' :
                     stats.productivityScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
                   }`}
@@ -507,32 +507,32 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             
             {/* Completion Rate */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Completion Rate</p>
-                  <p className="text-2xl font-bold text-blue-600">{stats.completionRate}%</p>
+                  <p className="text-xs md:text-sm text-gray-500">Completion Rate</p>
+                  <p className="text-lg md:text-2xl font-bold text-blue-600">{stats.completionRate}%</p>
                 </div>
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Award className="w-6 h-6 text-blue-600" />
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Award className="w-4 h-4 md:w-6 md:h-6 text-blue-600" />
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-1">{stats.totalCompleted} of {stats.totalTasks} tasks</p>
             </div>
             
             {/* Overdue Tasks */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Overdue Tasks</p>
-                  <p className={`text-2xl font-bold ${stats.totalOverdue > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  <p className="text-xs md:text-sm text-gray-500">Overdue Tasks</p>
+                  <p className={`text-lg md:text-2xl font-bold ${stats.totalOverdue > 0 ? 'text-red-600' : 'text-green-600'}`}>
                     {stats.totalOverdue}
                   </p>
                 </div>
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center ${
                   stats.totalOverdue > 0 ? 'bg-red-100' : 'bg-green-100'
                 }`}>
-                  <AlertCircle className={`w-6 h-6 ${
+                  <AlertCircle className={`w-4 h-4 md:w-6 md:h-6 ${
                     stats.totalOverdue > 0 ? 'text-red-600' : 'text-green-600'
                   }`} />
                 </div>
@@ -541,18 +541,18 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
             
             {/* Due Today */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="bg-white p-3 md:p-4 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-500">Due Today</p>
-                  <p className={`text-2xl font-bold ${stats.tasksDueToday > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                  <p className="text-xs md:text-sm text-gray-500">Due Today</p>
+                  <p className={`text-lg md:text-2xl font-bold ${stats.tasksDueToday > 0 ? 'text-orange-600' : 'text-green-600'}`}>
                     {stats.tasksDueToday}
                   </p>
                 </div>
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                <div className={`w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center ${
                   stats.tasksDueToday > 0 ? 'bg-orange-100' : 'bg-green-100'
                 }`}>
-                  <Clock className={`w-6 h-6 ${
+                  <Clock className={`w-4 h-4 md:w-6 md:h-6 ${
                     stats.tasksDueToday > 0 ? 'text-orange-600' : 'text-green-600'
                   }`} />
                 </div>
@@ -561,8 +561,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Additional Stats Row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Additional Stats Row - Hidden on Small Mobile */}
+          <div className="hidden sm:grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
             {/* In Progress */}
             <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between">
@@ -617,18 +617,18 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Tasks Sections by Priority and Status */}
           <div className="lg:col-span-2">
             {/* Filter Controls */}
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">
                 {selectedProjectId ? `${selectedProjectName} Tasks` : 'Recent Tasks'}
               </h2>
               <select 
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
-                className="text-sm text-gray-600 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="text-xs md:text-sm text-gray-600 border border-gray-300 rounded-lg px-2 md:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="All Time">All Time</option>
                 <option value="This Week">This Week</option>
@@ -636,41 +636,41 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               </select>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* High Priority Tasks */}
               {sortedTasks.filter(task => task.priority === 'High' || task.priority === 'Critical').length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-red-200">
-                  <div className="px-6 py-4 border-b border-red-100 bg-red-50">
+                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-red-100 bg-red-50">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-red-800 flex items-center">
-                        <div className="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
-                        High Priority Tasks ({sortedTasks.filter(task => task.priority === 'High' || task.priority === 'Critical').length})
+                      <h3 className="text-base md:text-lg font-semibold text-red-800 flex items-center">
+                        <div className="w-2 h-2 md:w-3 md:h-3 bg-red-500 rounded-full mr-2 md:mr-3"></div>
+                        High Priority ({sortedTasks.filter(task => task.priority === 'High' || task.priority === 'Critical').length})
                       </h3>
-                      <span className="text-sm text-red-600 bg-red-100 px-2 py-1 rounded">Urgent</span>
+                      <span className="text-xs md:text-sm text-red-600 bg-red-100 px-2 py-1 rounded">Urgent</span>
                     </div>
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
                     {sortedTasks.filter(task => task.priority === 'High' || task.priority === 'Critical').slice(0, 3).map((task) => (
                       <div 
                         key={task.id}
                         onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
+                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
                       >
-                        <div className="flex items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${task.avatarColor} mr-3`}>
+                        <div className="flex items-center flex-1 min-w-0">
+                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
                             {task.avatar}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{task.name}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)}`}>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 text-sm md:text-base truncate">{task.name}</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mt-1">
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getPriorityColor(task.priority)} w-fit`}>
                                 {task.priority}
                               </span>
-                              <span className="text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                              <span className="text-xs md:text-sm text-gray-500 mt-1 sm:mt-0">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
                           {task.status}
                         </span>
                       </div>
@@ -682,32 +682,32 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               {/* Pending Tasks */}
               {tasksByStatus.pending.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
+                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                      <h3 className="text-base md:text-lg font-semibold text-gray-900 flex items-center">
+                        <div className="w-2 h-2 md:w-3 md:h-3 bg-purple-500 rounded-full mr-2 md:mr-3"></div>
                         Pending Tasks ({tasksByStatus.pending.length})
                       </h3>
-                      <span className="text-sm text-purple-600 bg-purple-50 px-2 py-1 rounded">Needs Attention</span>
+                      <span className="text-xs md:text-sm text-purple-600 bg-purple-50 px-2 py-1 rounded">Needs Attention</span>
                     </div>
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
                     {tasksByStatus.pending.slice(0, 3).map((task) => (
                       <div 
                         key={task.id}
                         onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
                       >
-                        <div className="flex items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${task.avatarColor} mr-3`}>
+                        <div className="flex items-center flex-1 min-w-0">
+                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
                             {task.avatar}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{task.name}</p>
-                            <p className="text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 text-sm md:text-base truncate">{task.name}</p>
+                            <p className="text-xs md:text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
                           </div>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
                           {task.status}
                         </span>
                       </div>
@@ -719,32 +719,32 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               {/* In Progress Tasks */}
               {tasksByStatus.inProgress.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
+                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                      <h3 className="text-base md:text-lg font-semibold text-gray-900 flex items-center">
+                        <div className="w-2 h-2 md:w-3 md:h-3 bg-green-500 rounded-full mr-2 md:mr-3"></div>
                         In Progress ({tasksByStatus.inProgress.length})
                       </h3>
-                      <span className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded">Active</span>
+                      <span className="text-xs md:text-sm text-green-600 bg-green-50 px-2 py-1 rounded">Active</span>
                     </div>
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
                     {tasksByStatus.inProgress.slice(0, 3).map((task) => (
                       <div 
                         key={task.id}
                         onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
                       >
-                        <div className="flex items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${task.avatarColor} mr-3`}>
+                        <div className="flex items-center flex-1 min-w-0">
+                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
                             {task.avatar}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{task.name}</p>
-                            <p className="text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 text-sm md:text-base truncate">{task.name}</p>
+                            <p className="text-xs md:text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</p>
                           </div>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
                           {task.status}
                         </span>
                       </div>
@@ -756,37 +756,37 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               {/* Completed Late Tasks */}
               {completedLateTasks.length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-yellow-200">
-                  <div className="px-6 py-4 border-b border-yellow-100 bg-yellow-50">
+                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-yellow-100 bg-yellow-50">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-yellow-800 flex items-center">
-                        <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
+                      <h3 className="text-base md:text-lg font-semibold text-yellow-800 flex items-center">
+                        <div className="w-2 h-2 md:w-3 md:h-3 bg-yellow-500 rounded-full mr-2 md:mr-3"></div>
                         Completed Late ({completedLateTasks.length})
                       </h3>
-                      <span className="text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Delivered Late</span>
+                      <span className="text-xs md:text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded">Delivered Late</span>
                     </div>
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
                     {completedLateTasks.slice(0, 3).map((task) => (
                       <div 
                         key={task.id}
                         onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
+                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors border border-gray-100"
                       >
-                        <div className="flex items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${task.avatarColor} mr-3`}>
+                        <div className="flex items-center flex-1 min-w-0">
+                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
                             {task.avatar}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900 line-through">{task.name}</p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span className="text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 line-through text-sm md:text-base truncate">{task.name}</p>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2 mt-1">
+                              <span className="text-xs md:text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full w-fit">
                                 Completed {task.daysLate} day{task.daysLate > 1 ? 's' : ''} late
                               </span>
-                              <span className="text-sm text-gray-500">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                              <span className="text-xs md:text-sm text-gray-500 mt-1 sm:mt-0">Due: {new Date(task.dueDate).toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
                           ✓ Done Late
                         </span>
                       </div>
@@ -797,16 +797,15 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
               {/* Completed Tasks */}
               {tasksByStatus.completed.filter(task => {
-                // Only show completed tasks that were NOT completed late
                 const dueDate = new Date(task.dueDate);
                 const today = new Date();
-                return dueDate >= today; // Completed on time or early
+                return dueDate >= today;
               }).length > 0 && (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                  <div className="px-6 py-4 border-b border-gray-200">
+                  <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+                      <h3 className="text-base md:text-lg font-semibold text-gray-900 flex items-center">
+                        <div className="w-2 h-2 md:w-3 md:h-3 bg-blue-500 rounded-full mr-2 md:mr-3"></div>
                         Recently Completed ({tasksByStatus.completed.filter(task => {
                           const dueDate = new Date(task.dueDate);
                           const today = new Date();
@@ -815,15 +814,14 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                       </h3>
                       <button 
                         onClick={onNavigateToMyTasks}
-                        className="text-sm text-blue-600 hover:text-blue-700"
+                        className="text-xs md:text-sm text-blue-600 hover:text-blue-700"
                       >
                         View All
                       </button>
                     </div>
                   </div>
-                  <div className="p-4 space-y-3">
+                  <div className="p-3 md:p-4 space-y-2 md:space-y-3">
                     {tasksByStatus.completed.filter(task => {
-                      // Only show completed tasks that were NOT completed late
                       const dueDate = new Date(task.dueDate);
                       const today = new Date();
                       return dueDate >= today;
@@ -831,18 +829,18 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                       <div 
                         key={task.id}
                         onClick={() => handleTaskClick(task)}
-                        className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors opacity-75"
+                        className="flex items-center justify-between p-2 md:p-3 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors opacity-75"
                       >
-                        <div className="flex items-center">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${task.avatarColor} mr-3`}>
+                        <div className="flex items-center flex-1 min-w-0">
+                          <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full flex items-center justify-center text-white text-xs md:text-sm font-medium ${task.avatarColor} mr-2 md:mr-3 flex-shrink-0`}>
                             {task.avatar}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900 line-through">{task.name}</p>
-                            <p className="text-sm text-gray-500">Completed</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 line-through text-sm md:text-base truncate">{task.name}</p>
+                            <p className="text-xs md:text-sm text-gray-500">Completed</p>
                           </div>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor} ml-2 flex-shrink-0`}>
                           ✓ Done
                         </span>
                       </div>
@@ -853,9 +851,9 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
               {/* Empty State */}
               {sortedTasks.length === 0 && (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 md:p-8 text-center">
                   <div className="text-gray-500">
-                    <p className="text-lg font-medium">No tasks found</p>
+                    <p className="text-base md:text-lg font-medium">No tasks found</p>
                     <p className="text-sm">
                       {selectedProjectId 
                         ? `No tasks in ${selectedProjectName} project yet.`
@@ -868,24 +866,24 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="space-y-6">
+          {/* Right Sidebar - Stack on Mobile */}
+          <div className="space-y-4 md:space-y-6">
             {/* Schedule Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Schedule</h3>
-                  <MoreHorizontal className="w-5 h-5 text-gray-400" />
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900">Schedule</h3>
+                  <MoreHorizontal className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
                 </div>
               </div>
               
-              <div className="p-6">
+              <div className="p-4 md:p-6">
                 {/* Week Calendar */}
-                <div className="grid grid-cols-7 gap-1 mb-6">
+                <div className="grid grid-cols-7 gap-1 mb-4 md:mb-6">
                   {weekDays.map((day, index) => (
                     <div key={index} className="text-center">
                       <div className="text-xs text-gray-500 mb-1">{day.day}</div>
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-medium cursor-pointer transition-colors ${
+                      <div className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-xs md:text-sm font-medium cursor-pointer transition-colors ${
                         day.active 
                           ? 'bg-purple-500 text-white' 
                           : 'text-gray-700 hover:bg-gray-100'
@@ -897,20 +895,20 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
 
                 {/* Schedule Items */}
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   {scheduleItems.map((item) => (
-                    <div key={item.id} className="border-l-4 border-blue-500 pl-4 cursor-pointer hover:bg-gray-50 p-2 rounded-r transition-colors">
+                    <div key={item.id} className="border-l-4 border-blue-500 pl-3 md:pl-4 cursor-pointer hover:bg-gray-50 p-2 rounded-r transition-colors">
                       <h4 className="font-medium text-gray-900 text-sm">{item.title}</h4>
                       <p className="text-xs text-gray-500 mt-1">{item.time}</p>
                       <div className="flex items-center mt-2">
                         <div className="flex -space-x-1">
                           {item.attendees.map((attendee, index) => (
-                            <div key={index} className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white ${attendee.color}`}>
+                            <div key={index} className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white ${attendee.color}`}>
                               {attendee.avatar}
                             </div>
                           ))}
                         </div>
-                        <MoreHorizontal className="w-4 h-4 text-gray-400 ml-2" />
+                        <MoreHorizontal className="w-3 h-3 md:w-4 md:h-4 text-gray-400 ml-2" />
                       </div>
                     </div>
                   ))}
@@ -920,20 +918,20 @@ const DashboardView: React.FC<DashboardViewProps> = ({
 
             {/* Notes Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">Notes</h3>
-                  <StickyNote className="w-5 h-5 text-gray-400" />
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900">Notes</h3>
+                  <StickyNote className="w-4 h-4 md:w-5 md:h-5 text-gray-400" />
                 </div>
               </div>
               
-              <div className="p-6">
-                <div className="space-y-4">
+              <div className="p-4 md:p-6">
+                <div className="space-y-3 md:space-y-4">
                   {notes.map((note) => (
-                    <div key={note.id} className="flex items-start space-x-3 p-2 rounded hover:bg-gray-50 transition-colors">
+                    <div key={note.id} className="flex items-start space-x-2 md:space-x-3 p-2 rounded hover:bg-gray-50 transition-colors">
                       <button
                         onClick={() => toggleNote(note.id)}
-                        className={`mt-1 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        className={`mt-1 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
                           note.completed
                             ? 'bg-purple-500 border-purple-500 text-white'
                             : 'border-gray-300 hover:border-purple-500'
@@ -941,7 +939,7 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                       >
                         {note.completed && <span className="text-xs">✓</span>}
                       </button>
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <h4 className={`text-sm font-medium ${
                           note.completed ? 'line-through text-gray-500' : 'text-gray-900'
                         }`}>
