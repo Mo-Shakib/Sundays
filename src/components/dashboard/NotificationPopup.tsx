@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Trash2 } from 'lucide-react';
+import { X, Trash2, Clock, AlertTriangle, Target } from 'lucide-react';
 import { useNotifications } from '../../context/NotificationContext';
 
 interface NotificationPopupProps {
@@ -35,6 +35,20 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ isOpen, onClose }
       orange: 'bg-orange-500'
     };
     return colorMap[color as keyof typeof colorMap] || 'bg-blue-500';
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'overdue':
+        return <AlertTriangle className="w-4 h-4 text-red-500" />;
+      case 'deadline':
+      case 'reminder':
+        return <Clock className="w-4 h-4 text-orange-500" />;
+      case 'task':
+        return <Target className="w-4 h-4 text-purple-500" />;
+      default:
+        return null;
+    }
   };
 
   const handleNotificationClick = (notificationId: string) => {
@@ -79,7 +93,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ isOpen, onClose }
             {state.notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <X className="w-8 h-8 text-gray-400" />
+                  <Target className="w-8 h-8 text-gray-400" />
                 </div>
                 <h4 className="text-lg font-medium text-gray-900 mb-2">All caught up! 🎉</h4>
                 <p className="text-sm text-gray-500">No new notifications right now. Keep up the great work!</p>
@@ -91,18 +105,35 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ isOpen, onClose }
                   onClick={() => handleNotificationClick(notification.id)}
                   className={`p-4 hover:bg-gray-50 border-b border-gray-100 cursor-pointer transition-colors ${
                     !notification.isRead ? 'bg-blue-50' : ''
-                  }`}
+                  } ${notification.priority === 'high' ? 'border-l-4 border-red-400' : ''}`}
                 >
                   <div className="flex items-start space-x-3">
-                    <div 
-                      className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${getColorClasses(notification.color)}`}
-                    ></div>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <div 
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${getColorClasses(notification.color)}`}
+                      ></div>
+                      {getNotificationIcon(notification.type)}
+                    </div>
                     <div className="flex-1">
-                      <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
-                        {notification.title}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">{notification.message}</p>
-                      <p className="text-xs text-gray-400 mt-2">{getTimeAgo(notification.timestamp)}</p>
+                      <div className="flex items-start justify-between">
+                        <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
+                          {notification.title}
+                        </p>
+                        {notification.priority === 'high' && (
+                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                            Urgent
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{notification.message}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-gray-400">{getTimeAgo(notification.timestamp)}</p>
+                        {notification.taskId && (
+                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">
+                            Task
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {!notification.isRead && (
                       <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>

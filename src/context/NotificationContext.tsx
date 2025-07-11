@@ -1,20 +1,31 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 
+interface Task {
+  id: string;
+  title: string;
+  dueDate?: Date;
+  priority: 'low' | 'medium' | 'high';
+  status: 'pending' | 'in-progress' | 'completed';
+  createdAt: Date;
+}
+
 interface Notification {
   id: string;
-  type: 'task' | 'productivity' | 'motivation' | 'deadline' | 'achievement';
+  type: 'task' | 'productivity' | 'motivation' | 'deadline' | 'achievement' | 'overdue' | 'reminder';
   title: string;
   message: string;
   timestamp: Date;
   priority: 'low' | 'medium' | 'high';
   isRead: boolean;
   color: 'blue' | 'green' | 'yellow' | 'purple' | 'red' | 'orange';
+  taskId?: string;
 }
 
 interface NotificationState {
   notifications: Notification[];
   lastNotificationTime: Date | null;
+  lastTaskCheck: Date | null;
   notificationCount: number;
 }
 
@@ -22,7 +33,8 @@ type NotificationAction =
   | { type: 'ADD_NOTIFICATION'; payload: Notification }
   | { type: 'CLEAR_NOTIFICATIONS' }
   | { type: 'MARK_READ'; payload: string }
-  | { type: 'SET_LAST_NOTIFICATION_TIME'; payload: Date };
+  | { type: 'SET_LAST_NOTIFICATION_TIME'; payload: Date }
+  | { type: 'SET_LAST_TASK_CHECK'; payload: Date };
 
 interface NotificationContextType {
   state: NotificationState;
@@ -30,6 +42,7 @@ interface NotificationContextType {
   clearNotifications: () => void;
   markAsRead: (id: string) => void;
   generateContextualNotification: () => void;
+  checkTaskNotifications: (tasks: Task[]) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -60,6 +73,11 @@ const notificationReducer = (state: NotificationState, action: NotificationActio
         ...state,
         lastNotificationTime: action.payload
       };
+    case 'SET_LAST_TASK_CHECK':
+      return {
+        ...state,
+        lastTaskCheck: action.payload
+      };
     default:
       return state;
   }
@@ -88,10 +106,19 @@ const motivationalMessages = [
   { title: "Finish Strong! 🏁", message: "Week ending strong means next week starts stronger!", type: "motivation" as const }
 ];
 
+const taskMotivationMessages = [
+  { title: "Task Time! 📋", message: "Your to-do list is calling. Let's turn it into a 'ta-da' list!", type: "task" as const },
+  { title: "Priority Focus! 🎯", message: "High-priority tasks first. You've got the power to tackle them!", type: "task" as const },
+  { title: "Deadline Champion! ⏰", message: "Beat the clock and feel the satisfaction of early completion!", type: "deadline" as const },
+  { title: "Task Momentum! ⚡", message: "Each completed task builds unstoppable momentum!", type: "task" as const },
+  { title: "Productivity Surge! 📊", message: "Your pending tasks are opportunities for victory!", type: "productivity" as const }
+];
+
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(notificationReducer, {
     notifications: [],
     lastNotificationTime: null,
+    lastTaskCheck: null,
     notificationCount: 0
   });
   
@@ -116,6 +143,141 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     dispatch({ type: 'MARK_READ', payload: id });
   };
 
+  const getTimeUntilDue = (dueDate: Date): string => {
+    const now = new Date();
+    const diff = dueDate.getTime() - now.getTime();
+    const hours = Math.ceil(diff / (1000 * 60 * 60));
+    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+    if (hours < 1) return 'Less than 1 hour';
+    if (hours <= 24) return `${hours} hour${hours > 1 ? 's' : ''}`;
+    return `${days} day${days > 1 ? 's' : ''}`;
+  };
+
+  const checkTaskNotifications = (tasks: Task[]) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+
+    // Check for overdue tasks
+    const overdueTasks = tasks.filter(task => 
+      task.status !== 'completed' && 
+      task.dueDate && 
+      new Date(task.dueDate) < today
+    );
+
+    // Check for tasks due today
+    const tasksDueToday = tasks.filter(task => 
+      task.status !== 'completed' && 
+      task.dueDate && 
+      new Date(task.dueDate).toDateString() === today.toDateString()
+    );
+
+    // Check for tasks due tomorrow
+    const tasksDueTomorrow = tasks.filter(task => 
+      task.status !== 'completed' && 
+      task.dueDate && 
+      new Date(task.dueDate).toDateString() === tomorrow.toDateString()
+    );
+
+    // Check for pending tasks without due dates
+    const pendingTasks = tasks.filter(task => 
+      task.status === 'pending' && !task.dueDate
+    );
+
+    // Check for high priority tasks
+    const highPriorityPending = tasks.filter(task => 
+      task.status !== 'completed' && task.priority === 'high'
+    );
+
+    // Generate notifications for overdue tasks
+    if (overdueTasks.length > 0) {
+      const overdueTask = overdueTasks[0];
+      const daysOverdue = Math.floor((now.getTime() - new Date(overdueTask.dueDate!).getTime()) / (1000 * 60 * 60 * 24));
+      
+      addNotification({
+        type: 'overdue',
+        title: 'Overdue Alert! 🚨',
+        message: `"${overdueTask.title}" is ${daysOverdue} day${daysOverdue > 1 ? 's' : ''} overdue. Time to tackle it!`,
+        priority: 'high',
+        color: 'red',
+        taskId: overdueTask.id
+      });
+    }
+
+    // Generate notifications for tasks due today
+    if (tasksDueToday.length > 0) {
+      const todayTask = tasksDueToday[0];
+      addNotification({
+        type: 'deadline',
+        title: 'Due Today! 📅',
+        message: `"${todayTask.title}" is due today. Let's get it done!`,
+        priority: 'high',
+        color: 'orange',
+        taskId: todayTask.id
+      });
+    }
+
+    // Generate notifications for tasks due tomorrow
+    if (tasksDueTomorrow.length > 0 && Math.random() < 0.3) { // 30% chance to avoid spam
+      const tomorrowTask = tasksDueTomorrow[0];
+      addNotification({
+        type: 'reminder',
+        title: 'Due Tomorrow! ⏰',
+        message: `"${tomorrowTask.title}" is due tomorrow. Start preparing now!`,
+        priority: 'medium',
+        color: 'yellow',
+        taskId: tomorrowTask.id
+      });
+    }
+
+    // Generate notifications for pending tasks
+    if (pendingTasks.length > 0 && Math.random() < 0.4) { // 40% chance
+      const pendingTask = pendingTasks[Math.floor(Math.random() * pendingTasks.length)];
+      const taskMessage = taskMotivationMessages[Math.floor(Math.random() * taskMotivationMessages.length)];
+      
+      addNotification({
+        type: 'task',
+        title: taskMessage.title,
+        message: `"${pendingTask.title}" is waiting for your attention. ${taskMessage.message.split('!')[1] || 'Let\'s get started!'}`,
+        priority: 'medium',
+        color: 'purple',
+        taskId: pendingTask.id
+      });
+    }
+
+    // Generate notifications for high priority tasks
+    if (highPriorityPending.length > 0 && Math.random() < 0.5) { // 50% chance
+      const highPriorityTask = highPriorityPending[0];
+      addNotification({
+        type: 'task',
+        title: 'High Priority! 🔥',
+        message: `"${highPriorityTask.title}" is high priority. Your focused attention will make it happen!`,
+        priority: 'high',
+        color: 'red',
+        taskId: highPriorityTask.id
+      });
+    }
+
+    // Weekly task summary (Mondays)
+    const dayOfWeek = now.getDay();
+    if (dayOfWeek === 1 && Math.random() < 0.6) { // Monday, 60% chance
+      const totalTasks = tasks.length;
+      const completedTasks = tasks.filter(t => t.status === 'completed').length;
+      const completionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      addNotification({
+        type: 'productivity',
+        title: 'Weekly Kickoff! 🌟',
+        message: `New week, fresh start! You have ${tasks.filter(t => t.status !== 'completed').length} tasks to conquer. Current completion rate: ${completionRate}%`,
+        priority: 'medium',
+        color: 'blue'
+      });
+    }
+
+    dispatch({ type: 'SET_LAST_TASK_CHECK', payload: now });
+  };
+
   const generateContextualNotification = () => {
     const now = new Date();
     const hour = now.getHours();
@@ -135,7 +297,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const morningMessages = [
         { title: "Rise & Grind! 🌅", message: "Early bird catches the worm! Start your day with purpose.", type: "motivation" as const },
         { title: "Morning Power! ☕", message: "Fresh mind, fresh start. Today is full of possibilities!", type: "motivation" as const },
-        { title: "Day Starter! 🚀", message: "Your morning routine sets the tone. Make it powerful!", type: "motivation" as const }
+        { title: "Day Starter! 🚀", message: "Your morning routine sets the tone. Make it powerful!", type: "motivation" as const },
+        { title: "Task Time! 📋", message: "Morning is perfect for tackling your most important tasks!", type: "task" as const }
       ];
       notification = morningMessages[Math.floor(Math.random() * morningMessages.length)];
     }
@@ -145,7 +308,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const afternoonMessages = [
         { title: "Midday Momentum! ⚡", message: "Don't let the afternoon slump win. Power through!", type: "productivity" as const },
         { title: "Energy Refuel! 🔋", message: "Half the day is done. Make the rest count double!", type: "motivation" as const },
-        { title: "Peak Hours! 📊", message: "This is your productive prime time. Maximize it!", type: "productivity" as const }
+        { title: "Peak Hours! 📊", message: "This is your productive prime time. Maximize it!", type: "productivity" as const },
+        { title: "Task Check! ✅", message: "Perfect time to review and tackle pending tasks!", type: "task" as const }
       ];
       notification = afternoonMessages[Math.floor(Math.random() * afternoonMessages.length)];
     }
@@ -155,7 +319,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const eveningMessages = [
         { title: "Final Sprint! 🏃‍♂️", message: "Strong finishes create winning habits. Push to the end!", type: "motivation" as const },
         { title: "Day Closer! 🎯", message: "How you end today determines how you start tomorrow.", type: "motivation" as const },
-        { title: "Achievement Mode! 🏆", message: "Turn your to-do list into a 'ta-da' list!", type: "achievement" as const }
+        { title: "Achievement Mode! 🏆", message: "Turn your to-do list into a 'ta-da' list!", type: "achievement" as const },
+        { title: "Evening Review! 📝", message: "Time to wrap up today's tasks and plan tomorrow's wins!", type: "task" as const }
       ];
       notification = eveningMessages[Math.floor(Math.random() * eveningMessages.length)];
     }
@@ -187,7 +352,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       productivity: 'green', 
       task: 'purple',
       deadline: 'red',
-      achievement: 'yellow'
+      achievement: 'yellow',
+      overdue: 'red',
+      reminder: 'orange'
     } as const;
 
     addNotification({
@@ -248,7 +415,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       addNotification,
       clearNotifications,
       markAsRead,
-      generateContextualNotification
+      generateContextualNotification,
+      checkTaskNotifications
     }}>
       {children}
     </NotificationContext.Provider>

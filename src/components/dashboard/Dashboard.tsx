@@ -1,45 +1,49 @@
-@@ .. @@
- import React, { useState } from 'react';
- import Sidebar from './dashboard/Sidebar';
- import Header from './dashboard/Header';
- import MainContent from './dashboard/MainContent';
+import React, { useState } from 'react';
+import Sidebar from './dashboard/Sidebar';
+import Header from './dashboard/Header';
+import MainContent from './dashboard/MainContent';
+import { useTaskNotifications } from '../../hooks/useTaskNotifications';
 
- const Dashboard = () => {
-   const [sidebarOpen, setSidebarOpen] = useState(false);
-+  const [projects, setProjects] = useState([
-+    { 
-+      id: 1,
-+      name: 'Event Planning', 
-+      description: 'Planning and organizing company events and team activities',
-+      color: 'bg-pink-200', 
-+      dotColor: 'bg-pink-500' 
-+    },
-+    { 
-+      id: 2,
-+      name: 'Breakfast Plan', 
-+      description: 'Weekly breakfast menu planning and coordination',
-+      color: 'bg-green-200', 
-+      dotColor: 'bg-green-500' 
-+    },
-+  ]);
-+
-+  const handleAddProject = (newProject: any) => {
-+    const project = {
-+      ...newProject,
-+      id: Date.now()
-+    };
-+    setProjects([...projects, project]);
-+  };
+const Dashboard: React.FC = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [projects, setProjects] = useState([
+    { 
+      id: 1,
+      name: 'Event Planning', 
+      description: 'Planning and organizing company events and team activities',
+      color: 'bg-pink-200', 
+      dotColor: 'bg-pink-500' 
+    },
+    { 
+      id: 2,
+      name: 'Breakfast Plan', 
+      description: 'Weekly breakfast menu planning and coordination',
+      color: 'bg-green-200', 
+      dotColor: 'bg-green-500' 
+    },
+  ]);
+  
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  
+  // Add this hook to enable task notifications
+  useTaskNotifications(tasks);
 
-   return (
+  const handleAddProject = (newProject: any) => {
+    const project = {
+      ...newProject,
+      id: Date.now()
+    };
+    setProjects([...projects, project]);
+  };
+
+  return (
      <div className="min-h-screen bg-gray-50 flex">
--      <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-+      <Sidebar 
-+        sidebarOpen={sidebarOpen} 
-+        setSidebarOpen={setSidebarOpen}
-+        projects={projects}
-+        onAddProject={handleAddProject}
-+      />
+      <Sidebar 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen}
+        projects={projects}
+        onAddProject={handleAddProject}
+      />
        
        <div className="flex-1 flex flex-col min-w-0">
         <Header 
@@ -54,3 +58,5 @@
      </div>
    );
  };
+
+ export default Dashboard;
