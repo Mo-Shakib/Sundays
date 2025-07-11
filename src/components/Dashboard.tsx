@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useSupabaseData } from '../hooks/useSupabaseData';
 import Sidebar from './dashboard/Sidebar';
 import Header from './dashboard/Header';
@@ -11,7 +11,6 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState('Dashboard');
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
-  const [showAddProjectModal, setShowAddProjectModal] = useState(false);
   const [showProjectCompletionModal, setShowProjectCompletionModal] = useState(false);
   const [projectToComplete, setProjectToComplete] = useState<{ project: any; pendingTasks: any[] } | null>(null);
 
@@ -23,7 +22,6 @@ const Dashboard = () => {
     error,
     addProject,
     updateProject,
-    deleteProject,
     addTask,
     updateTask,
     deleteTask
@@ -41,7 +39,6 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error adding project:', error);
     }
-    setShowAddProjectModal(false);
   };
 
   const handleArchiveProject = (projectId: number) => {
@@ -106,7 +103,7 @@ const Dashboard = () => {
         name: newTask.name,
         description: newTask.description,
         assignee: newTask.assignee,
-        avatar: newTask.assignee.split(' ').map(n => n[0]).join(''),
+        avatar: newTask.assignee.split(' ').map((n: string) => n[0]).join(''),
         avatarColor: `bg-${['blue', 'green', 'purple', 'orange', 'pink', 'indigo'][Math.floor(Math.random() * 6)]}-500`,
         projectId: newTask.projectId,
         status: newTask.status,
@@ -285,7 +282,18 @@ const Dashboard = () => {
       )}
       
       <div className="flex-1 flex flex-col min-w-0">
-        <Header setSidebarOpen={setSidebarOpen} />
+        <Header 
+          setSidebarOpen={setSidebarOpen}
+          projects={projects}
+          tasks={tasks}
+          onProjectSelect={handleProjectSelect}
+          onTaskSelect={() => {
+            // For now, navigate to My Task view when a task is selected
+            // This could be enhanced to open a task modal in the future
+            setActiveView('My Task');
+          }}
+          onViewChange={setActiveView}
+        />
         {renderContent()}
       </div>
     </div>

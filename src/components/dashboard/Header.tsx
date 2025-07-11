@@ -1,16 +1,28 @@
 import React from 'react';
-import { Menu, Bell, Search, User, ChevronDown, Plus } from 'lucide-react';
+import { Menu, Bell, Search, User, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import NotificationPopup from './NotificationPopup';
+import SearchComponent from './SearchComponent';
 
 interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
+  projects?: any[];
+  tasks?: any[];
+  onProjectSelect?: (projectId: number) => void;
+  onTaskSelect?: (task: any) => void;
+  onViewChange?: (view: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
-  const [searchQuery, setSearchQuery] = React.useState('');
+const Header: React.FC<HeaderProps> = ({ 
+  setSidebarOpen,
+  projects = [],
+  tasks = [],
+  onProjectSelect,
+  onTaskSelect,
+  onViewChange
+}) => {
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showUserDropdown, setShowUserDropdown] = React.useState(false);
   const [showMobileSearch, setShowMobileSearch] = React.useState(false);
@@ -19,6 +31,19 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
 
   // Count unread notifications
   const unreadCount = notificationState.notifications.filter(n => !n.isRead).length;
+
+  // Add keyboard shortcut for search
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowMobileSearch(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
@@ -33,21 +58,15 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
           
           {/* Desktop Search */}
           <div className="hidden md:flex items-center flex-1 max-w-lg mx-auto lg:mx-0 lg:ml-6">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search or type a command"
-                className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">⌘ F</span>
-              </div>
-            </div>
+            <SearchComponent
+              projects={projects}
+              tasks={tasks}
+              onProjectSelect={onProjectSelect || (() => {})}
+              onTaskSelect={onTaskSelect}
+              onViewChange={onViewChange || (() => {})}
+              placeholder="Search projects and tasks..."
+              isMobile={false}
+            />
           </div>
           
         </div>
@@ -126,18 +145,16 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
       {/* Mobile Search Bar */}
       {showMobileSearch && (
         <div className="md:hidden px-4 pb-4 border-t border-gray-200 bg-white">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search or type a command"
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
+          <SearchComponent
+            projects={projects}
+            tasks={tasks}
+            onProjectSelect={onProjectSelect || (() => {})}
+            onTaskSelect={onTaskSelect}
+            onViewChange={onViewChange || (() => {})}
+            placeholder="Search projects and tasks..."
+            isMobile={true}
+            onClose={() => setShowMobileSearch(false)}
+          />
         </div>
       )}
       
