@@ -710,15 +710,23 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               <h2 className="text-lg md:text-xl font-semibold text-gray-900">
                 {selectedProjectId ? `${selectedProjectName} Tasks` : 'Recent Tasks'}
               </h2>
-              <select 
-                value={timeFilter}
-                onChange={(e) => setTimeFilter(e.target.value)}
-                className="text-xs md:text-sm text-gray-600 border border-gray-300 rounded-lg px-2 md:px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="All Time">All Time</option>
-                <option value="This Week">This Week</option>
-                <option value="This Month">This Month</option>
-              </select>
+              <div className="relative">
+                <select 
+                  value={timeFilter}
+                  onChange={(e) => setTimeFilter(e.target.value)}
+                  className="appearance-none bg-white text-xs md:text-sm text-gray-700 border border-gray-200 rounded-xl px-3 md:px-4 py-2 md:py-2.5 pr-8 md:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <option value="All Time">All Time</option>
+                  <option value="This Week">This Week</option>
+                  <option value="This Month">This Month</option>
+                </select>
+                {/* Custom dropdown arrow */}
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 md:px-3 pointer-events-none">
+                  <svg className="w-3 h-3 md:w-4 md:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
             
             <div className="space-y-4 md:space-y-6">
