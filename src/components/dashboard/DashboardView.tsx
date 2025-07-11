@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Share, Clock, Calendar, MoreHorizontal, TrendingUp, Target, Zap, Award, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { Plus, Share, Clock, Calendar, MoreHorizontal, TrendingUp, Target, Zap, Award, Users, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
@@ -519,17 +519,20 @@ const DashboardView: React.FC<DashboardViewProps> = ({
               )}
             </div>
             {/* Desktop buttons */}
-            <div className="hidden sm:flex items-center space-x-3">
-              <button className="hidden md:flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <Share className="w-4 h-4 mr-2" />
-                Share
+            <div className="hidden sm:flex items-center space-x-2 md:space-x-3">
+              <button
+                onClick={onNavigateToMyTasks}
+                className="flex items-center justify-center px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all shadow-sm"
+              >
+                <Target className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                Take Action
               </button>
               <button 
                 onClick={handleAddTask}
-                className="flex items-center justify-center px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center justify-center px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Task
+                <Sparkles className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                Create Task
               </button>
             </div>
           </div>
@@ -539,14 +542,21 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             <p className="text-blue-800 font-medium text-center text-sm md:text-base">{getInspiringMessage()}</p>
           </div>
 
-          {/* Mobile Add Task Button - Below inspiring message */}
-          <div className="sm:hidden mb-4">
+          {/* Mobile Action Buttons - Below inspiring message */}
+          <div className="sm:hidden mb-4 space-y-2">
+            <button
+              onClick={onNavigateToMyTasks}
+              className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all shadow-sm"
+            >
+              <Target className="w-4 h-4 mr-2" />
+              Take Action on My Tasks
+            </button>
             <button 
               onClick={handleAddTask}
-              className="w-full flex items-center justify-center px-4 py-3 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="w-full flex items-center justify-center px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Task
+              <Sparkles className="w-4 h-4 mr-2" />
+              Create New Task
             </button>
           </div>
 
@@ -708,24 +718,34 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             {/* Filter Controls */}
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <h2 className="text-lg md:text-xl font-semibold text-gray-900">
-                {selectedProjectId ? `${selectedProjectName} Tasks` : 'Recent Tasks'}
+                {selectedProjectId ? `${selectedProjectName} Tasks` : 'Your Task Overview'}
               </h2>
-              <div className="relative">
-                <select 
-                  value={timeFilter}
-                  onChange={(e) => setTimeFilter(e.target.value)}
-                  className="appearance-none bg-white text-xs md:text-sm text-gray-700 border border-gray-200 rounded-xl px-3 md:px-4 py-2 md:py-2.5 pr-8 md:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <option value="All Time">All Time</option>
-                  <option value="This Week">This Week</option>
-                  <option value="This Month">This Month</option>
-                </select>
-                {/* Custom dropdown arrow */}
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 md:px-3 pointer-events-none">
-                  <svg className="w-3 h-3 md:w-4 md:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                <div className="relative">
+                  <select 
+                    value={timeFilter}
+                    onChange={(e) => setTimeFilter(e.target.value)}
+                    className="appearance-none bg-white text-xs md:text-sm text-gray-700 border border-gray-200 rounded-xl px-3 md:px-4 py-2 md:py-2.5 pr-8 md:pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm hover:bg-gray-50 transition-colors cursor-pointer min-w-0 w-full sm:w-auto"
+                  >
+                    <option value="All Time">📅 All Time</option>
+                    <option value="This Week">📆 This Week</option>
+                    <option value="This Month">🗓️ This Month</option>
+                  </select>
+                  {/* Custom dropdown arrow */}
+                  <div className="absolute inset-y-0 right-0 flex items-center px-2 md:px-3 pointer-events-none">
+                    <svg className="w-3 h-3 md:w-4 md:h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
+                <button
+                  onClick={onNavigateToMyTasks}
+                  className="px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all shadow-sm flex items-center justify-center whitespace-nowrap"
+                >
+                  <Target className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
+                  <span className="hidden sm:inline">View All Tasks</span>
+                  <span className="sm:hidden">All Tasks</span>
+                </button>
               </div>
             </div>
             
@@ -965,13 +985,18 @@ const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="bg-white rounded-xl shadow-sm border border-gray-200">
               <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base md:text-lg font-semibold text-gray-900">Schedule</h3>
+                  <h3 className="text-base md:text-lg font-semibold text-gray-900 flex items-center">
+                    <Calendar className="w-4 h-4 md:w-5 md:h-5 mr-2 text-blue-500" />
+                    Your Schedule
+                  </h3>
                   <button
                     onClick={() => setShowScheduleModal(true)}
-                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    className="flex items-center px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all shadow-sm"
                     title="Add schedule item"
                   >
-                    <Plus className="w-4 h-4 md:w-5 md:h-5 text-gray-400 hover:text-gray-600" />
+                    <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                    <span className="hidden sm:inline">Add Event</span>
+                    <span className="sm:hidden">Add</span>
                   </button>
                 </div>
               </div>
@@ -981,34 +1006,34 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 <div className="grid grid-cols-7 gap-1 mb-4 md:mb-6">
                   {weekDays.map((day, index) => (
                     <div key={index} className="text-center">
-                      <div className={`text-xs mb-1 ${day.isWeekend ? 'text-green-600' : 'text-gray-500'}`}>
+                      <div className={`text-xs mb-1 font-medium ${day.isWeekend ? 'text-green-600' : 'text-gray-500'}`}>
                         {day.day}
                       </div>
                       <button
                         onClick={() => handleDateSelect(day.fullDate)}
-                        className={`w-6 h-6 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-xs md:text-sm font-medium transition-colors ${
+                        className={`w-6 h-6 md:w-8 md:h-8 rounded-xl flex items-center justify-center text-xs md:text-sm font-medium transition-all shadow-sm ${
                           day.active 
-                            ? 'bg-blue-500 text-white' 
+                            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-blue-200' 
                             : day.isToday
-                            ? 'bg-blue-100 text-blue-600 border border-blue-300'
+                            ? 'bg-gradient-to-br from-blue-100 to-blue-200 text-blue-700 border border-blue-300'
                             : day.isWeekend
-                            ? 'text-green-600 hover:bg-green-50'
-                            : 'text-gray-700 hover:bg-gray-100'
+                            ? 'text-green-600 hover:bg-green-50 hover:shadow-sm'
+                            : 'text-gray-700 hover:bg-gray-100 hover:shadow-sm'
                         }`}
                       >
                         {day.date}
                       </button>
                       {/* Indicator for items on this date */}
                       {getScheduleItemsForDate(day.fullDate).length > 0 && (
-                        <div className="w-1 h-1 bg-blue-500 rounded-full mx-auto mt-1"></div>
+                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mx-auto mt-1 shadow-sm"></div>
                       )}
                     </div>
                   ))}
                 </div>
 
                 {/* Selected Date Display */}
-                <div className="mb-3 text-center">
-                  <p className="text-sm text-gray-600">
+                <div className="mb-4 text-center">
+                  <p className="text-sm md:text-base text-gray-700 font-medium">
                     {selectedDate.toLocaleDateString('en-US', { 
                       weekday: 'long', 
                       month: 'long', 
@@ -1020,44 +1045,49 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 {/* Schedule Items for Selected Date */}
                 <div className="space-y-3 md:space-y-4">
                   {isLoadingSchedule ? (
-                    <div className="text-center py-4">
+                    <div className="text-center py-6">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="text-sm text-gray-500 mt-2">Loading schedule...</p>
+                      <p className="text-sm text-gray-500 mt-2">Loading your schedule...</p>
                     </div>
                   ) : getScheduleItemsForDate(selectedDate).length === 0 ? (
-                    <div className="text-center py-4">
-                      <p className="text-sm text-gray-500">No events scheduled for this day</p>
+                    <div className="text-center py-6">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <Calendar className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <p className="text-sm text-gray-600 mb-3">Your day is wide open!</p>
                       <button
                         onClick={() => setShowScheduleModal(true)}
-                        className="mt-2 text-xs text-blue-600 hover:text-blue-700"
+                        className="inline-flex items-center px-3 py-2 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all shadow-sm"
                       >
-                        Add an event
+                        <Plus className="w-3 h-3 mr-1" />
+                        Schedule something amazing
                       </button>
                     </div>
                   ) : (
                     getScheduleItemsForDate(selectedDate).map((item) => (
-                      <div key={item.id} className="border-l-4 border-blue-500 pl-3 md:pl-4 hover:bg-gray-50 p-2 rounded-r transition-colors group">
+                      <div key={item.id} className="border-l-4 border-blue-500 pl-3 md:pl-4 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 p-3 rounded-r-xl transition-all group shadow-sm hover:shadow-md">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 text-sm truncate">{item.title}</h4>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <h4 className="font-semibold text-gray-900 text-sm truncate">{item.title}</h4>
+                            <p className="text-xs text-gray-600 mt-1 flex items-center">
+                              <Clock className="w-3 h-3 mr-1" />
                               {formatTimeDisplay(item.start_time)} to {formatTimeDisplay(item.end_time)}
                             </p>
                             {item.description && (
-                              <p className="text-xs text-gray-400 mt-1 truncate">{item.description}</p>
+                              <p className="text-xs text-gray-500 mt-1 truncate">{item.description}</p>
                             )}
                             <div className="flex items-center mt-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                item.type === 'meeting' ? 'bg-purple-100 text-purple-600' : 'bg-green-100 text-green-600'
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium shadow-sm ${
+                                item.type === 'meeting' ? 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-700' : 'bg-gradient-to-r from-green-100 to-green-200 text-green-700'
                               }`}>
-                                {item.type}
+                                {item.type === 'meeting' ? '👥 Meeting' : '📝 Task'}
                               </span>
                             </div>
                           </div>
                           <button
                             onClick={() => handleDeleteScheduleItem(item.id!)}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-red-400 hover:text-red-600 transition-all"
-                            title="Delete event"
+                            className="opacity-0 group-hover:opacity-100 p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            title="Remove event"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
