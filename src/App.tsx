@@ -7,6 +7,7 @@ import SignupPage from './components/SignupPage';
 import AboutPage from './components/AboutPage';
 import ContactPage from './components/ContactPage';
 import FeaturesPage from './components/FeaturesPage';
+import ProfilePage from './components/ProfilePage';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthenticatedRoute from './components/AuthenticatedRoute';
@@ -24,6 +25,11 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/features" element={<FeaturesPage />} />
             <Route path="/landing" element={<LandingPage />} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />

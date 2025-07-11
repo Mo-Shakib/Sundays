@@ -1,5 +1,6 @@
 import React from 'react';
 import { Menu, Bell, Search, User, ChevronDown, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import NotificationPopup from './NotificationPopup';
@@ -98,6 +99,14 @@ const Header: React.FC<HeaderProps> = ({ setSidebarOpen }) => {
                     <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
+                  <Link
+                    to="/profile"
+                    onClick={() => setShowUserDropdown(false)}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <User className="w-4 h-4 mr-2" />
+                    Profile Settings
+                  </Link>
                   <button
                     onClick={() => {
                       logout();

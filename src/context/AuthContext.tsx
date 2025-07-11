@@ -5,6 +5,8 @@ interface User {
   id: string;
   name: string;
   email: string;
+  company?: string;
+  bio?: string;
 }
 
 interface AuthContextType {
@@ -12,6 +14,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
+  updateProfile: (updates: Partial<Pick<User, 'name' | 'company' | 'bio'>>) => Promise<{ success: boolean; error?: string }>;
   isAuthenticated: boolean;
   loading: boolean;
 }
@@ -133,7 +136,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser({
               id: profile.id,
               name: profile.name,
-              email: profile.email
+              email: profile.email,
+              company: profile.company,
+              bio: profile.bio
             });
           } else {
             console.log('No profile found for user');
@@ -147,7 +152,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     checkSession();
+  }, []);
 
+  // Listen for auth changes
+  React.useEffect(() => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, !!session);
@@ -171,7 +179,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               setUser({
                 id: profile.id,
                 name: profile.name,
-                email: profile.email
+                email: profile.email,
+                company: profile.company,
+                bio: profile.bio
               });
             } else {
               console.log('Failed to create/get profile, retrying...');
@@ -187,7 +197,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   setUser({
                     id: retryProfile.id,
                     name: retryProfile.name,
-                    email: retryProfile.email
+                    email: retryProfile.email,
+                    company: retryProfile.company,
+                    bio: retryProfile.bio
                   });
                 }
               }, 2000);
@@ -248,7 +260,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser({
             id: profile.id,
             name: profile.name,
-            email: profile.email
+            email: profile.email,
+            company: profile.company,
+            bio: profile.bio
           });
         }
         
@@ -327,6 +341,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const updateProfile = async (updates: Partial<Pick<User, 'name' | 'company' | 'bio'>>): Promise<{ success: boolean; error?: string }> => {
+    if (!user?.id) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          ...(updates.name !== undefined && { name: updates.name.trim() }),
+          ...(updates.company !== undefined && { company: updates.company.trim() || null }),
+          ...(updates.bio !== undefined && { bio: updates.bio.trim() || null })
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Update local user state
+      setUser(prev => prev ? {
+        ...prev,
+        ...updates
+      } : null);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      return { success: false, error: 'Failed to update profile' };
+    }
+  };
+
   const logout = async () => {
     try {
       await supabase.auth.signOut();
@@ -341,6 +385,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     signup,
     logout,
+    updateProfile,
     isAuthenticated: !!user,
     loading
   };
