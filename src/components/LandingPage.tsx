@@ -122,7 +122,7 @@ const LandingPage = () => {
       name: 'Solo',
       price: 'Free',
       description: 'Perfect for individuals getting started',
-      features: ['Up to 5 projects', 'Basic task management', 'Personal dashboard', 'Mobile app access', 'Individual workspace'],
+      features: ['Up to 5 projects', 'Basic task management', 'Personal dashboard', 'Individual workspace'],
       cta: 'Get Started Free',
       popular: false
     },
@@ -139,7 +139,7 @@ const LandingPage = () => {
       name: 'Enterprise',
       price: 'Custom',
       description: 'Advanced solutions for large organizations',
-      features: ['Everything in Team', 'SSO integration', 'Advanced security', 'Custom integrations', 'Dedicated support', 'Performance insights'],
+      features: ['Everything in Team', 'Custom integrations', 'Dedicated support', 'Performance insights'],
       cta: 'Contact Sales',
       popular: false
     }
@@ -564,13 +564,13 @@ const LandingPage = () => {
               className="group bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1 flex items-center justify-center"
             >
               <Rocket className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-              Start Your Free Trial
+              Start Using for Free
             </Link>
             <Link
               to="/contact"
               className="border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-4 rounded-2xl text-lg font-semibold transition-all duration-200 flex items-center justify-center"
             >
-              Talk to Sales
+              Contact Us
             </Link>
           </div>
         </div>
