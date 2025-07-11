@@ -145,6 +145,12 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
     setSelectedIndex(-1);
   };
 
+  const handleInputFocus = () => {
+    if (query.trim()) {
+      setIsOpen(true);
+    }
+  };
+
   const handleResultClick = (result: SearchResult) => {
     if (result.type === 'project') {
       onProjectSelect(result.id);
@@ -199,7 +205,7 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
           type="text"
           value={query}
           onChange={handleInputChange}
-          onFocus={() => query.trim() && setIsOpen(true)}
+          onFocus={handleInputFocus}
           placeholder={placeholder}
           className={`block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
             isMobile ? 'bg-white' : 'hover:bg-gray-50'

@@ -144,7 +144,7 @@ const Header: React.FC<HeaderProps> = ({
       
       {/* Mobile Search Bar */}
       {showMobileSearch && (
-        <div className="md:hidden px-4 pb-4 border-t border-gray-200 bg-white">
+        <div className="md:hidden px-4 pt-3 pb-4 border-t border-gray-200 bg-white">
           <SearchComponent
             projects={projects}
             tasks={tasks}
@@ -165,12 +165,12 @@ const Header: React.FC<HeaderProps> = ({
       />
       
       {/* Click outside to close dropdowns */}
-      {(showUserDropdown || showMobileSearch) && (
+      {(showUserDropdown || showNotifications) && (
         <div 
           className="fixed inset-0 z-20" 
           onClick={() => {
             setShowUserDropdown(false);
-            setShowMobileSearch(false);
+            setShowNotifications(false);
           }}
         />
       )}
