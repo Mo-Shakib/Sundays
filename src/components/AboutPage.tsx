@@ -19,7 +19,13 @@ import {
   Globe,
   Award,
   Menu,
-  X
+  X,
+  Code2,
+  Database,
+  Palette,
+  Terminal,
+  Cloud,
+  Layers
 } from 'lucide-react';
 
 const AboutPage = () => {
@@ -55,12 +61,12 @@ const AboutPage = () => {
   ];
 
   const technologies = [
-    { name: 'React', description: 'Modern UI Framework', color: 'text-blue-600', bg: 'bg-blue-100' },
-    { name: 'TypeScript', description: 'Type Safety', color: 'text-blue-700', bg: 'bg-blue-100' },
-    { name: 'Supabase', description: 'Backend & Database', color: 'text-green-600', bg: 'bg-green-100' },
-    { name: 'Tailwind', description: 'Styling Framework', color: 'text-cyan-600', bg: 'bg-cyan-100' },
-    { name: 'Vite', description: 'Build Tool', color: 'text-purple-600', bg: 'bg-purple-100' },
-    { name: 'Vercel', description: 'Deployment', color: 'text-gray-800', bg: 'bg-gray-100' }
+    { name: 'React', description: 'Modern UI Framework', color: 'text-blue-600', bg: 'bg-blue-100', icon: Code2 },
+    { name: 'TypeScript', description: 'Type Safety', color: 'text-blue-700', bg: 'bg-blue-100', icon: Code },
+    { name: 'Supabase', description: 'Backend & Database', color: 'text-green-600', bg: 'bg-green-100', icon: Database },
+    { name: 'Tailwind', description: 'Styling Framework', color: 'text-cyan-600', bg: 'bg-cyan-100', icon: Palette },
+    { name: 'Vite', description: 'Build Tool', color: 'text-purple-600', bg: 'bg-purple-100', icon: Terminal },
+    { name: 'Vercel', description: 'Deployment', color: 'text-gray-800', bg: 'bg-gray-100', icon: Cloud }
   ];
 
   return (
@@ -320,7 +326,7 @@ const AboutPage = () => {
               {technologies.map((tech, index) => (
                 <div key={index} className="group text-center p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                   <div className={`w-16 h-16 ${tech.bg} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                    <span className={`${tech.color} font-bold text-xl`}>{tech.name.charAt(0)}</span>
+                    <tech.icon className={`${tech.color} w-8 h-8`} />
                   </div>
                   <h4 className="font-bold text-gray-900 mb-2">{tech.name}</h4>
                   <p className="text-sm text-gray-600">{tech.description}</p>
