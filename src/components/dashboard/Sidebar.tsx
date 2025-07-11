@@ -8,7 +8,6 @@ import {
   MessageSquare, 
   FileText, 
   Receipt, 
-  HelpCircle,
   Settings,
   Plus
 } from 'lucide-react';
@@ -160,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => setShowCompletedProjects(!showCompletedProjects)}
                 className="flex items-center justify-between w-full px-3 mb-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700 transition-colors"
               >
-                <span>Completed Projects ({archivedProjects.length})</span>
+                <span>Completed ({archivedProjects.length})</span>
                 <span className={`transform transition-transform ${showCompletedProjects ? 'rotate-180' : ''}`}>
                   ▼
                 </span>
@@ -208,13 +207,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             >
               <Settings className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
               Settings
-            </button>
-            <button
-              className="group flex items-center w-full px-3 py-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors"
-            >
-              <HelpCircle className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-              Help & Support
-              <span className="ml-auto w-5 h-5 bg-green-500 text-white text-xs rounded-full flex items-center justify-center">8</span>
             </button>
           </div>
         </nav>
