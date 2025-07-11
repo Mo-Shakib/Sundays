@@ -445,7 +445,8 @@ const DashboardView: React.FC<DashboardViewProps> = ({
                 <p className="text-sm md:text-lg text-blue-600 mt-1">Viewing: {selectedProjectName}</p>
               )}
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+            {/* Desktop buttons */}
+            <div className="hidden sm:flex items-center space-x-3">
               <button className="hidden md:flex items-center px-3 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 <Share className="w-4 h-4 mr-2" />
                 Share
@@ -463,6 +464,17 @@ const DashboardView: React.FC<DashboardViewProps> = ({
           {/* Inspiring Message */}
           <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
             <p className="text-blue-800 font-medium text-center text-sm md:text-base">{getInspiringMessage()}</p>
+          </div>
+
+          {/* Mobile Add Task Button - Below inspiring message */}
+          <div className="sm:hidden mb-4">
+            <button 
+              onClick={handleAddTask}
+              className="w-full flex items-center justify-center px-4 py-3 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Task
+            </button>
           </div>
 
           {/* Progress Paragraph */}
