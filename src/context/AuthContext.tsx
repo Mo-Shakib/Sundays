@@ -13,6 +13,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  signInWithGoogle: () => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (updates: Partial<Pick<User, 'name' | 'company' | 'bio'>>) => Promise<{ success: boolean; error?: string }>;
   isAuthenticated: boolean;
@@ -341,6 +342,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const signInWithGoogle = async (): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      console.log('Attempting Google sign-in...');
+      
+      // Check if Supabase is configured
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        return { success: false, error: 'Supabase is not configured. Please connect to Supabase first.' };
+      }
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        console.error('Google sign-in error:', error);
+        return { success: false, error: 'Google sign-in failed. Please try again.' };
+      }
+
+      // OAuth redirects to Google, so we can't wait for the result here
+      // The auth state change listener will handle the user when they return
+      console.log('Redirecting to Google OAuth...');
+      return { success: true };
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+      return { success: false, error: 'An unexpected error occurred during Google sign-in. Please try again.' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateProfile = async (updates: Partial<Pick<User, 'name' | 'company' | 'bio'>>): Promise<{ success: boolean; error?: string }> => {
     if (!user?.id) {
       return { success: false, error: 'User not authenticated' };
@@ -384,6 +419,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     login,
     signup,
+    signInWithGoogle,
     logout,
     updateProfile,
     isAuthenticated: !!user,
