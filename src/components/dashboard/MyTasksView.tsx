@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Filter, Search, Clock, Sparkles, Target, TrendingUp, CheckCircle } from 'lucide-react';
+import { Filter, Search, Clock, Sparkles, Target, TrendingUp, CheckCircle, Users } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
@@ -320,7 +320,16 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                 {/* Task Header */}
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900 text-sm">{task.name}</h4>
+                    <div className="flex items-center space-x-2">
+                      <h4 className="font-medium text-gray-900 text-sm">{task.name}</h4>
+                      {/* Assigned Task Badge */}
+                      {task.isAssigned && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <Users className="w-3 h-3 mr-1" />
+                          Assigned by {task.assignedBy}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">{getProjectName(task.projectId)}</p>
                   </div>
                   <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)} ml-2`}>
@@ -425,6 +434,15 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
                         >
                           {task.name}
                         </div>
+                        {/* Assigned Task Badge for Desktop */}
+                        {task.isAssigned && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <Users className="w-3 h-3 mr-1" />
+                              Assigned by {task.assignedBy}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>

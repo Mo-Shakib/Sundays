@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { FolderOpen, Users, Calendar, BarChart3, Plus } from 'lucide-react';
+import { FolderOpen, Users, Calendar, BarChart3, Plus, UserPlus } from 'lucide-react';
 import AddProjectModal from './AddProjectModal';
+import InviteToProjectModal from './InviteToProjectModal';
 
 interface ProjectsViewProps {
   projects: any[];
@@ -13,6 +14,8 @@ interface ProjectsViewProps {
 const ProjectsView: React.FC<ProjectsViewProps> = ({ projects, tasks, onProjectSelect, onArchiveProject, onAddProject }) => {
   const [showArchived, setShowArchived] = useState(false);
   const [showAddProjectModal, setShowAddProjectModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   
   // Filter projects based on archived status
   const activeProjects = projects.filter(project => !project.archived);
@@ -54,6 +57,15 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ projects, tasks, onProjectS
   const handleAddProject = (newProject: any) => {
     onAddProject(newProject);
     setShowAddProjectModal(false);
+  };
+
+  const handleInviteToProject = (project: any) => {
+    setSelectedProject(project);
+    setShowInviteModal(true);
+  };
+
+  const handleInviteSent = () => {
+    // You might want to show a success message or refresh data here
   };
 
   return (
@@ -151,23 +163,40 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ projects, tasks, onProjectS
                 project.archived ? 'opacity-75' : ''
               }`}
             >
-              {/* Archive/Unarchive Button */}
-              {!showArchived && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onArchiveProject(project.id);
-                  }}
-                  className="absolute top-3 right-3 md:top-4 md:right-4 md:opacity-0 md:group-hover:opacity-100 px-2 py-1 md:px-3 md:py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-all shadow-sm"
-                  title="Complete project"
-                >
-                  Complete
-                </button>
-              )}
+              {/* Project Actions */}
+              <div className="absolute top-3 right-3 md:top-4 md:right-4 flex items-center space-x-2">
+                {!showArchived && (
+                  <>
+                    {/* Invite Users Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleInviteToProject(project);
+                      }}
+                      className="md:opacity-0 md:group-hover:opacity-100 p-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all shadow-sm"
+                      title="Invite team members"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                    </button>
+
+                    {/* Complete Project Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onArchiveProject(project.id);
+                      }}
+                      className="md:opacity-0 md:group-hover:opacity-100 px-2 py-1 md:px-3 md:py-1 text-xs font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg transition-all shadow-sm"
+                      title="Complete project"
+                    >
+                      Complete
+                    </button>
+                  </>
+                )}
+              </div>
               
               {/* Project Header */}
               <div 
-                className="flex items-start justify-between mb-3 md:mb-4 cursor-pointer"
+                className="flex items-start justify-between mb-3 md:mb-4 cursor-pointer pr-20"
                 onClick={() => onProjectSelect(project.id)}
               >
                 <div className="flex items-center">
@@ -175,10 +204,18 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ projects, tasks, onProjectS
                     <FolderOpen className="w-5 h-5 md:w-6 md:h-6 text-gray-700" />
                   </div>
                   <div className="ml-3">
-                    <h3 className={`text-base md:text-lg font-semibold text-gray-900 ${project.archived ? 'line-through' : ''}`}>
-                      {project.name}
-                    </h3>
-                    <span className={`w-2 h-2 rounded-full ${project.dotColor} inline-block`}></span>
+                    <div className="flex items-center space-x-2">
+                      <h3 className={`text-base md:text-lg font-semibold text-gray-900 ${project.archived ? 'line-through' : ''}`}>
+                        {project.name}
+                      </h3>
+                      {/* Shared Project Badge */}
+                      {project.isShared && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <Users className="w-3 h-3 mr-1" />
+                          Shared by {project.sharedBy}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -219,32 +256,55 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ projects, tasks, onProjectS
                   </div>
                 </div>
 
-                {/* Project Team */}
-                {assignees.length > 0 && (
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                    <div className="flex items-center">
-                      <div className="flex -space-x-2">
-                        {assignees.map((assignee, index) => (
-                          <div 
-                            key={index}
-                            className="w-6 h-6 md:w-8 md:h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
-                          >
-                            {assignee.split(' ').map(n => n[0]).join('')}
-                          </div>
-                        ))}
+                {/* Project Team and Collaboration Info */}
+                <div className="space-y-2">
+                  {assignees.length > 0 && (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                      <div className="flex items-center">
+                        <div className="flex -space-x-2">
+                          {assignees.map((assignee, index) => (
+                            <div 
+                              key={index}
+                              className="w-6 h-6 md:w-8 md:h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white"
+                            >
+                              {assignee.split(' ').map((n: string) => n[0]).join('')}
+                            </div>
+                          ))}
+                        </div>
+                        <span className="ml-2 text-xs text-gray-500">
+                          {assignees.length} member{assignees.length > 1 ? 's' : ''}
+                        </span>
                       </div>
-                      <span className="ml-2 text-xs text-gray-500">
-                        {assignees.length} member{assignees.length > 1 ? 's' : ''}
-                      </span>
+                      
+                      {nextDueDate && (
+                        <div className="text-xs text-gray-500">
+                          Due: {new Date(nextDueDate).toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
-                    
-                    {nextDueDate && (
-                      <div className="text-xs text-gray-500">
-                        Due: {new Date(nextDueDate).toLocaleDateString()}
+                  )}
+
+                  {/* Collaboration Actions */}
+                  {!showArchived && (
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleInviteToProject(project);
+                        }}
+                        className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                      >
+                        <UserPlus className="w-3 h-3" />
+                        <span>Invite</span>
+                      </button>
+                      
+                      <div className="flex items-center space-x-1 text-xs text-gray-500">
+                        <Users className="w-3 h-3" />
+                        <span>Team Project</span>
                       </div>
-                    )}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
               
               {project.archived && (
@@ -277,6 +337,19 @@ const ProjectsView: React.FC<ProjectsViewProps> = ({ projects, tasks, onProjectS
         <AddProjectModal
           onSave={handleAddProject}
           onClose={() => setShowAddProjectModal(false)}
+        />
+      )}
+
+      {/* Invite to Project Modal */}
+      {showInviteModal && selectedProject && (
+        <InviteToProjectModal
+          isOpen={showInviteModal}
+          onClose={() => {
+            setShowInviteModal(false);
+            setSelectedProject(null);
+          }}
+          project={selectedProject}
+          onInviteSent={handleInviteSent}
         />
       )}
     </>

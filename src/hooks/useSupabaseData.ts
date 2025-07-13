@@ -12,6 +12,10 @@ export interface Project {
   created_at: string;
   updated_at: string;
   user_id: string;
+  // Collaboration fields
+  isShared?: boolean;
+  sharedBy?: string;
+  memberRole?: 'owner' | 'member';
 }
 
 export interface Task {
@@ -32,6 +36,9 @@ export interface Task {
   created_at: string;
   updated_at: string;
   user_id: string;
+  // Collaboration fields
+  isAssigned?: boolean;
+  assignedBy?: string;
 }
 
 export const useSupabaseData = () => {
@@ -51,7 +58,10 @@ export const useSupabaseData = () => {
     archived: row.archived,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    user_id: row.user_id
+    user_id: row.user_id,
+    isShared: row.is_shared,
+    sharedBy: row.shared_by,
+    memberRole: row.member_role
   });
 
   const transformTask = (row: any): Task => ({
@@ -71,12 +81,17 @@ export const useSupabaseData = () => {
     files: row.files || 0,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    user_id: row.user_id
+    user_id: row.user_id,
+    isAssigned: row.is_assigned,
+    assignedBy: row.assigned_by
   });
 
-  // Load data from Supabase
+  // Load data from Supabase including collaborative projects/tasks
   const loadData = async () => {
-    if (!user?.id) return;
+    if (!user?.id || !user?.email) {
+      console.log('No user found:', { userId: user?.id, userEmail: user?.email });
+      return;
+    }
     
     // Check if Supabase is properly configured
     if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
@@ -85,43 +100,93 @@ export const useSupabaseData = () => {
       return;
     }
 
+    console.log('Starting data load for user:', user.id);
+
     try {
       setLoading(true);
       setError(null);
 
-      // Load projects
-      const { data: projectsData, error: projectsError } = await supabase
+      // Test basic connection first
+      console.log('Testing basic Supabase connection...');
+      const { data: testData, error: testError } = await supabase
+        .from('profiles')
+        .select('count')
+        .limit(1);
+
+      if (testError) {
+        console.error('Basic connection test failed:', testError);
+        if (testError.code === '42P01') {
+          throw new Error('Database tables not found. Please run the database migrations in your Supabase dashboard.');
+        }
+        throw new Error(`Database connection failed: ${testError.message}`);
+      }
+
+      console.log('Basic connection successful, loading projects...');
+
+      // First, try to load basic projects that the user owns
+      const { data: ownedProjects, error: ownedProjectsError } = await supabase
         .from('projects')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (projectsError) {
-        if (projectsError.code === '42P01') {
-          throw new Error('Database tables not found. Please run the database migrations.');
+      if (ownedProjectsError) {
+        console.error('Error loading projects:', ownedProjectsError);
+        if (ownedProjectsError.code === '42P01') {
+          throw new Error('Projects table not found. Please run the database migrations.');
         }
-        throw projectsError;
+        if (ownedProjectsError.code === 'PGRST116') {
+          throw new Error('Authentication failed. Please sign out and sign back in.');
+        }
+        throw new Error(`Failed to load projects: ${ownedProjectsError.message}`);
       }
 
-      // Load tasks
-      const { data: tasksData, error: tasksError } = await supabase
+      console.log('Loaded projects:', ownedProjects?.length || 0);
+
+      // Transform owned projects
+      const allProjectsData = (ownedProjects || []).map(project => ({
+        ...project,
+        is_shared: false,
+        shared_by: undefined,
+        member_role: 'owner'
+      }));
+
+      const allProjects = allProjectsData.map(transformProject);
+
+      console.log('Loading tasks...');
+
+      // Load owned tasks
+      const { data: ownedTasksData, error: ownedTasksError } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (tasksError) {
-        if (tasksError.code === '42P01') {
-          throw new Error('Database tables not found. Please run the database migrations.');
+      if (ownedTasksError) {
+        console.error('Error loading tasks:', ownedTasksError);
+        if (ownedTasksError.code === '42P01') {
+          throw new Error('Tasks table not found. Please run the database migrations.');
         }
-        throw tasksError;
+        throw new Error(`Failed to load tasks: ${ownedTasksError.message}`);
       }
 
-      setProjects((projectsData || []).map(transformProject));
-      setTasks((tasksData || []).map(transformTask));
-    } catch (err) {
-      console.error('Error loading data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load data');
+      console.log('Loaded tasks:', ownedTasksData?.length || 0);
+
+      // Transform owned tasks
+      const ownedTasks = (ownedTasksData || []).map(task => 
+        transformTask({
+          ...task,
+          is_assigned: false,
+          assigned_by: undefined
+        })
+      );
+
+      console.log('Data loading complete');
+      setProjects(allProjects);
+      setTasks(ownedTasks);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setError(error instanceof Error ? error.message : 'An error occurred while loading data');
     } finally {
       setLoading(false);
     }
@@ -185,7 +250,26 @@ export const useSupabaseData = () => {
 
       if (error) throw error;
 
-      const newProject = transformProject(data);
+      // Add creator as project owner/member
+      const { error: memberError } = await supabase
+        .from('project_members')
+        .insert({
+          project_id: data.id,
+          user_id: user.id,
+          role: 'owner'
+        });
+
+      if (memberError) {
+        console.error('Error adding project member:', memberError);
+        // Don't throw here as the project was created successfully
+      }
+
+      const newProject = transformProject({
+        ...data,
+        is_shared: false,
+        shared_by: undefined,
+        member_role: 'owner'
+      });
       setProjects(prev => [newProject, ...prev]);
       return newProject;
     } catch (err) {

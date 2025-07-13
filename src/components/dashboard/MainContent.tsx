@@ -3,66 +3,38 @@ import { Plus, Share, Filter, MoreHorizontal, Calendar, StickyNote, Clock, Users
 import { useAuth } from '../../context/AuthContext';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
+import InvitationsInbox from './InvitationsInbox';
 
 interface MainContentProps {
-  selectedProjectId: number | null;
   projects: any[];
+  tasks: any[];
+  loading: boolean;
+  error: string | null;
+  onAddProject: (project: any) => Promise<void>;
+  onUpdateProject: (project: any) => Promise<void>;
+  onDeleteProject: (projectId: number) => Promise<void>;
+  onAddTask: (task: any) => Promise<void>;
+  onUpdateTask: (task: any) => Promise<void>;
+  onDeleteTask: (taskId: number) => Promise<void>;
+  onRefreshData: () => Promise<void>;
 }
 
-const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: availableProjects }) => {
+const MainContent: React.FC<MainContentProps> = ({ 
+  projects: availableProjects,
+  tasks: allTasks,
+  loading,
+  error,
+  onAddProject,
+  onUpdateProject,
+  onDeleteProject,
+  onAddTask,
+  onUpdateTask,
+  onDeleteTask,
+  onRefreshData
+}) => {
   const { user } = useAuth();
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   
-  const [tasks, setTasks] = useState([
-    {
-      id: 1,
-      name: 'Help DStudio get more customers',
-      description: 'Develop marketing strategies and campaigns to increase customer acquisition for DStudio.',
-      comments: 7,
-      files: 2,
-      assignee: 'Phoenix Winters',
-      avatar: 'PW',
-      avatarColor: 'bg-orange-500',
-      projectId: 1,
-      status: 'In Progress',
-      statusColor: 'bg-green-100 text-green-800',
-      priority: 'High',
-      dueDate: '2024-02-25',
-      tags: ['Marketing', 'Strategy']
-    },
-    {
-      id: 2,
-      name: 'Plan a trip',
-      description: 'Organize and plan the upcoming company retreat including venue, activities, and logistics.',
-      comments: 10,
-      files: 3,
-      assignee: 'Cohen Merritt',
-      avatar: 'CM',
-      avatarColor: 'bg-blue-500',
-      projectId: 2,
-      status: 'Pending',
-      statusColor: 'bg-purple-100 text-purple-800',
-      priority: 'Medium',
-      dueDate: '2024-03-01',
-      tags: ['Travel', 'Event']
-    },
-    {
-      id: 3,
-      name: 'Return a package',
-      description: 'Process return for defective equipment and coordinate with vendor for replacement.',
-      comments: 5,
-      files: 8,
-      assignee: 'Lukas Juarez',
-      avatar: 'LJ',
-      avatarColor: 'bg-green-500',
-      projectId: 3,
-      status: 'Completed',
-      statusColor: 'bg-blue-100 text-blue-800',
-      priority: 'Low',
-      dueDate: '2024-02-20',
-      tags: ['Logistics', 'Vendor']
-    }
-  ]);
-
   const [scheduleItems] = useState([
     {
       id: 1,
@@ -105,13 +77,14 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
 
   // Filter tasks based on selected project
   const filteredTasks = selectedProjectId 
-    ? tasks.filter(task => task.projectId === selectedProjectId)
-    : tasks;
+    ? allTasks.filter(task => task.project_id === selectedProjectId)
+    : allTasks;
 
   // Get selected project name for display
   const selectedProjectName = selectedProjectId 
     ? availableProjects.find(p => p.id === selectedProjectId)?.name || 'Unknown Project'
     : 'All Projects';
+
   const toggleNote = (id: number) => {
     setNotes(notes.map(note => 
       note.id === id ? { ...note, completed: !note.completed } : note
@@ -127,37 +100,64 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
     setShowAddTaskModal(true);
   };
 
-  const handleSaveTask = (updatedTask) => {
-    setTasks(tasks.map(task => 
-      task.id === updatedTask.id ? updatedTask : task
-    ));
-    setShowTaskModal(false);
-    setSelectedTask(null);
+  const handleSaveTask = async (updatedTask) => {
+    try {
+      await onUpdateTask(updatedTask);
+      setShowTaskModal(false);
+      setSelectedTask(null);
+    } catch (error) {
+      console.error('Failed to update task:', error);
+      alert('Failed to update task. Please try again.');
+    }
   };
 
-  const handleCreateTask = (newTask) => {
-    const task = {
-      ...newTask,
-      id: Date.now(),
-      comments: 0,
-      files: 0,
-      avatar: newTask.assignee.split(' ').map(n => n[0]).join(''),
-      avatarColor: `bg-${['blue', 'green', 'purple', 'orange', 'pink', 'indigo'][Math.floor(Math.random() * 6)]}-500`
-    };
-    setTasks([...tasks, task]);
-    setShowAddTaskModal(false);
+  const handleCreateTask = async (newTask) => {
+    try {
+      await onAddTask(newTask);
+      setShowAddTaskModal(false);
+    } catch (error) {
+      console.error('Failed to create task:', error);
+      alert('Failed to create task. Please try again.');
+    }
+  };
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      await onDeleteTask(taskId);
+      setShowTaskModal(false);
+      setSelectedTask(null);
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+      alert('Failed to delete task. Please try again.');
+    }
+  };
+
+  const handleStatusChange = async (taskId: number, newStatus: string) => {
+    try {
+      const task = allTasks.find(t => t.id === taskId);
+      if (task) {
+        await onUpdateTask({ ...task, status: newStatus });
+      }
+    } catch (error) {
+      console.error('Failed to update task status:', error);
+      alert('Failed to update task status. Please try again.');
+    }
   };
 
   // Calculate days remaining for a task
-    // Always show pending or incomplete tasks regardless of time filter
-    if (task.status !== 'Completed') {
-      return true;
+  const getDaysRemaining = (dueDate: string) => {
+    if (!dueDate) {
+      return { text: 'No due date', color: 'text-gray-600', bgColor: 'bg-gray-50' };
     }
     
-    // Only apply time filter to completed tasks
-  const getDaysRemaining = (dueDate: string) => {
     const today = new Date();
     const due = new Date(dueDate);
+    
+    // Check if date is valid
+    if (isNaN(due.getTime())) {
+      return { text: 'Invalid date', color: 'text-gray-600', bgColor: 'bg-gray-50' };
+    }
+    
     const diffTime = due.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
@@ -180,19 +180,13 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
     return project ? project.name : 'Unknown Project';
   };
 
-  const handleDeleteTask = (taskId) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
-    setShowTaskModal(false);
-    setSelectedTask(null);
-  };
-
   // Calculate time saved based on completed tasks
   const calculateTimeSaved = () => {
-    const completedTasks = tasks.filter(task => task.status === 'Completed');
+    const completedTasks = allTasks.filter(task => task.status === 'Completed');
     let totalHoursSaved = 0;
 
     completedTasks.forEach(task => {
-      const dueDate = new Date(task.dueDate);
+      const dueDate = new Date(task.due_date);
       const today = new Date();
       
       // If task was completed before due date, calculate time saved
@@ -204,26 +198,6 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
     });
 
     return totalHoursSaved;
-  };
-  const handleStatusChange = (taskId: number, newStatus: string) => {
-    const statusOptions = [
-      { value: 'Pending', color: 'bg-purple-100 text-purple-800' },
-      { value: 'In Progress', color: 'bg-green-100 text-green-800' },
-      { value: 'Completed', color: 'bg-blue-100 text-blue-800' },
-      { value: 'On Hold', color: 'bg-yellow-100 text-yellow-800' }
-    ];
-    
-    const statusOption = statusOptions.find(option => option.value === newStatus);
-    
-    setTasks(tasks.map(task => 
-      task.id === taskId 
-        ? { 
-            ...task, 
-            status: newStatus,
-            statusColor: statusOption?.color || 'bg-gray-100 text-gray-800'
-          }
-        : task
-    ));
   };
 
   const weekDays = [
@@ -253,15 +227,39 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
     if (hour < 17) return 'Good Afternoon!';
     return 'Good Evening!';
   };
+
+  if (loading) {
+    return (
+      <main className="flex-1 p-6 overflow-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading...</div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex-1 p-6 overflow-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-500">Error: {error}</div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <>
       <main className="flex-1 p-6 overflow-auto">
+        {/* Invitations Inbox */}
+        <InvitationsInbox onRefreshData={onRefreshData} />
+
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <div>
               <p className="text-sm text-gray-500">{getCurrentDate()}</p>
-              <h1 className="text-3xl font-bold text-gray-900">{getGreeting()} {user?.name?.split(' ')[0]},</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{getGreeting()} {user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0]},</h1>
               {selectedProjectId && (
                 <p className="text-lg text-blue-600 mt-1">Viewing: {selectedProjectName}</p>
               )}
@@ -289,11 +287,11 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
               <span className="ml-1">Time Saved</span>
             </div>
             <div className="flex items-center">
-              <span className="font-semibold text-gray-900">{tasks.filter(t => t.status === 'Completed').length}</span>
+              <span className="font-semibold text-gray-900">{allTasks.filter(t => t.status === 'Completed').length}</span>
               <span className="ml-1">Tasks Completed</span>
             </div>
             <div className="flex items-center">
-              <span className="font-semibold text-gray-900">{tasks.filter(t => t.status === 'In Progress').length}</span>
+              <span className="font-semibold text-gray-900">{allTasks.filter(t => t.status === 'In Progress').length}</span>
               <span className="ml-1">Tasks In-progress</span>
             </div>
           </div>
@@ -330,7 +328,7 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
                         Project
                       </th>
                       <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Assign
+                        Assignee
                       </th>
                       <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Due Date
@@ -356,11 +354,11 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
                         </td>
                       </tr>
                     ) : (
-                      filteredTasks.map((project) => (
+                      filteredTasks.map((task) => (
                       <tr 
-                        key={project.id} 
+                        key={task.id} 
                         className="hover:bg-gray-50 transition-colors cursor-pointer"
-                        onClick={() => handleTaskClick(project)}
+                        onClick={() => handleTaskClick(task)}
                       >
                         <td className="py-4 px-6">
                           <div className="flex items-center">
@@ -370,40 +368,44 @@ const MainContent: React.FC<MainContentProps> = ({ selectedProjectId, projects: 
                               </div>
                             </div>
                             <div>
-                              <div className="font-medium text-gray-900 hover:text-blue-600 transition-colors">{project.name}</div>
+                              <div className="font-medium text-gray-900 hover:text-blue-600 transition-colors">{task.name}</div>
                               <div className="flex items-center mt-1 text-xs text-gray-500">
-                                <span className="mr-3">💬 {project.comments}</span>
-                                <span>📎 {project.files}</span>
+                                <span className="mr-3">💬 0</span>
+                                <span>📎 0</span>
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-6">
-                          <span className="text-sm text-gray-600">{getProjectName(project.projectId)}</span>
+                          <span className="text-sm text-gray-600">{getProjectName(task.project_id)}</span>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${project.avatarColor}`}>
-                              {project.avatar}
+                            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+                              {task.assigned_to_email?.charAt(0).toUpperCase() || '?'}
                             </div>
                             <div className="ml-3">
-                              <div className="text-sm font-medium text-gray-900">{project.assignee}</div>
+                              <div className="text-sm font-medium text-gray-900">{task.assigned_to_email || 'Unassigned'}</div>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-6">
                           <div>
-                            <div className="text-sm text-gray-900">{new Date(project.dueDate).toLocaleDateString()}</div>
-                            <div className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${getDaysRemaining(project.dueDate).bgColor} ${getDaysRemaining(project.dueDate).color}`}>
-                              {getDaysRemaining(project.dueDate).text}
+                            <div className="text-sm text-gray-900">
+                              {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
                             </div>
+                            {task.due_date && (
+                              <div className={`text-xs px-2 py-1 rounded-full inline-block mt-1 ${getDaysRemaining(task.due_date).bgColor} ${getDaysRemaining(task.due_date).color}`}>
+                                {getDaysRemaining(task.due_date).text}
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="py-4 px-6">
                           <select
-                            value={project.status}
-                            onChange={(e) => handleStatusChange(project.id, e.target.value)}
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-none outline-none cursor-pointer ${project.statusColor}`}
+                            value={task.status}
+                            onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-none outline-none cursor-pointer bg-purple-100 text-purple-800"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <option value="Pending">Pending</option>

@@ -1,10 +1,12 @@
 import React from 'react';
-import { Menu, Bell, Search, User, ChevronDown } from 'lucide-react';
+import { Menu, Bell, Search, User, ChevronDown, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import NotificationPopup from './NotificationPopup';
 import SearchComponent from './SearchComponent';
+import InvitationsInbox from './InvitationsInbox';
+import { CollaborationService } from '../../services/collaborationService';
 
 interface HeaderProps {
   setSidebarOpen: (open: boolean) => void;
@@ -13,6 +15,7 @@ interface HeaderProps {
   onProjectSelect?: (projectId: number) => void;
   onTaskSelect?: (task: any) => void;
   onViewChange?: (view: string) => void;
+  onRefreshData?: () => void; // Add this prop to refresh data when invitations are accepted
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -21,17 +24,37 @@ const Header: React.FC<HeaderProps> = ({
   tasks = [],
   onProjectSelect,
   onTaskSelect,
-  onViewChange
+  onViewChange,
+  onRefreshData // Destructure the new prop
 }) => {
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showUserDropdown, setShowUserDropdown] = React.useState(false);
   const [showMobileSearch, setShowMobileSearch] = React.useState(false);
+  const [showInvitations, setShowInvitations] = React.useState(false);
+  const [pendingInvitationsCount, setPendingInvitationsCount] = React.useState(0);
   const desktopSearchRef = React.useRef<HTMLInputElement>(null);
   const { user, logout } = useAuth();
   const { state: notificationState } = useNotifications();
 
   // Count unread notifications
   const unreadCount = notificationState.notifications.filter(n => !n.isRead).length;
+
+  // Load pending invitations count
+  const loadPendingInvitations = React.useCallback(async () => {
+    try {
+      const invitations = await CollaborationService.getReceivedInvitations();
+      setPendingInvitationsCount(invitations.length);
+    } catch (err) {
+      console.error('Error loading invitations:', err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadPendingInvitations();
+    // Poll for new invitations every 30 seconds
+    const interval = setInterval(loadPendingInvitations, 30000);
+    return () => clearInterval(interval);
+  }, [loadPendingInvitations]);
 
   // Add keyboard shortcut for search
   React.useEffect(() => {
@@ -55,6 +78,11 @@ const Header: React.FC<HeaderProps> = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const handleInvitationResponse = () => {
+    loadPendingInvitations();
+    onRefreshData?.(); // Call the refreshData function if provided
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
@@ -91,7 +119,26 @@ const Header: React.FC<HeaderProps> = ({
           >
             <Search className="w-6 h-6" />
           </button>
+
+          {/* Invitations Inbox */}
+          <div className="relative">
+            <button 
+              className="relative p-2 text-gray-400 hover:text-gray-500 transition-colors rounded-md hover:bg-gray-100"
+              onClick={() => setShowInvitations(!showInvitations)}
+              title="Project Invitations"
+            >
+              <Mail className="w-6 h-6" />
+              {pendingInvitationsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-xs">
+                  <span className="text-xs text-white font-medium">
+                    {pendingInvitationsCount > 9 ? '9+' : pendingInvitationsCount}
+                  </span>
+                </span>
+              )}
+            </button>
+          </div>
           
+          {/* Notifications */}
           <div className="relative">
             <button 
               className="relative p-2 text-gray-400 hover:text-gray-500 transition-colors rounded-md hover:bg-gray-100"
@@ -170,6 +217,13 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       )}
       
+      {/* Invitations Inbox */}
+      <InvitationsInbox
+        isOpen={showInvitations}
+        onClose={() => setShowInvitations(false)}
+        onInvitationHandled={handleInvitationResponse}
+      />
+      
       {/* Notification Popup */}
       <NotificationPopup 
         isOpen={showNotifications} 
@@ -177,12 +231,13 @@ const Header: React.FC<HeaderProps> = ({
       />
       
       {/* Click outside to close dropdowns */}
-      {(showUserDropdown || showNotifications) && (
+      {(showUserDropdown || showNotifications || showInvitations) && (
         <div 
           className="fixed inset-0 z-20" 
           onClick={() => {
             setShowUserDropdown(false);
             setShowNotifications(false);
+            setShowInvitations(false);
           }}
         />
       )}

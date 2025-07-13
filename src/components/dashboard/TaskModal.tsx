@@ -1,5 +1,9 @@
 import React, { useState } from 'react';
-import { X, Edit, Trash2, Calendar, User, Flag, Tag, Clock, AlertTriangle } from 'lucide-react';
+import { X, Edit, Trash2, Calendar, User, Flag, Tag, Clock, AlertTriangle, Send, CheckCircle, UserCheck } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { CollaborationService } from '../../services/collaborationService';
+import AssignTaskModal from './AssignTaskModal';
+import TaskSubmissionModal from './TaskSubmissionModal';
 
 interface TaskModalProps {
   task: any;
@@ -12,6 +16,24 @@ interface TaskModalProps {
 const TaskModal: React.FC<TaskModalProps> = ({ task, projects, onSave, onDelete, onClose }) => {
   const [editedTask, setEditedTask] = useState({ ...task });
   const [isEditing, setIsEditing] = useState(false);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [collaborationInfo, setCollaborationInfo] = useState<any>(null);
+  const { user } = useAuth();
+
+  // Load collaboration info when modal opens
+  React.useEffect(() => {
+    const loadCollaborationInfo = async () => {
+      try {
+        const info = await CollaborationService.getTaskCollaborationInfo(task.id);
+        setCollaborationInfo(info);
+      } catch (err) {
+        console.error('Error loading collaboration info:', err);
+      }
+    };
+    
+    loadCollaborationInfo();
+  }, [task.id]);
 
   const handleSave = () => {
     const updatedTask = {
@@ -26,6 +48,32 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, projects, onSave, onDelete,
     if (window.confirm('Are you sure you want to delete this task?')) {
       onDelete(task.id);
     }
+  };
+
+  const handleTaskAssigned = () => {
+    // Refresh collaboration info after assignment
+    const loadCollaborationInfo = async () => {
+      try {
+        const info = await CollaborationService.getTaskCollaborationInfo(task.id);
+        setCollaborationInfo(info);
+      } catch (err) {
+        console.error('Error loading collaboration info:', err);
+      }
+    };
+    loadCollaborationInfo();
+  };
+
+  const handleTaskSubmitted = () => {
+    // Refresh collaboration info after submission
+    const loadCollaborationInfo = async () => {
+      try {
+        const info = await CollaborationService.getTaskCollaborationInfo(task.id);
+        setCollaborationInfo(info);
+      } catch (err) {
+        console.error('Error loading collaboration info:', err);
+      }
+    };
+    loadCollaborationInfo();
   };
 
   const statusOptions = [
@@ -50,6 +98,32 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, projects, onSave, onDelete,
   const getProjectName = (projectId: number) => {
     const project = projects.find(p => p.id === projectId);
     return project ? project.name : 'Unknown Project';
+  };
+
+  // Get project by ID
+  const getProject = (projectId: number) => {
+    return projects.find(p => p.id === projectId);
+  };
+
+  // Check if user is project owner
+  const isProjectOwner = () => {
+    const project = getProject(editedTask.projectId);
+    return project && project.user_id === user?.id;
+  };
+
+  // Check if user is task assignee
+  const isTaskAssignee = () => {
+    return collaborationInfo?.assignment && collaborationInfo.assignment.assigned_to_email === user?.email;
+  };
+
+  // Check if task is assigned to someone
+  const isTaskAssigned = () => {
+    return collaborationInfo?.assignment && collaborationInfo.assignment.status === 'accepted';
+  };
+
+  // Check if task has pending submission
+  const hasPendingSubmission = () => {
+    return collaborationInfo?.submission && collaborationInfo.submission.status === 'submitted';
   };
 
   // Calculate days remaining and get styling/message
@@ -137,265 +211,398 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, projects, onSave, onDelete,
   const IconComponent = daysInfo.icon;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-3 sm:p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-xl">
-          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <span className="text-sm sm:text-lg">📋</span>
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Task Details</h2>
-              <p className="text-xs sm:text-sm text-gray-500">ID: #{task.id}</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            >
-              <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <button
-              onClick={handleDelete}
-              className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-            <button
-              onClick={onClose}
-              className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Days Remaining Section - At Top */}
-          <div className={`p-4 sm:p-6 rounded-xl ${daysInfo.bgColor} ${daysInfo.textColor}`}>
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
-                <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
+    <>
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between p-3 sm:p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-xl">
+            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <span className="text-sm sm:text-lg">📋</span>
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xl sm:text-2xl font-bold">{daysInfo.label}</div>
-                <div className="text-xs sm:text-sm opacity-90">
-                  {editedTask.dueDate && new Date(editedTask.dueDate).toLocaleDateString('en-US', { 
-                    weekday: 'long', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </div>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Task Details</h2>
+                <p className="text-xs sm:text-sm text-gray-500">ID: #{task.id}</p>
               </div>
             </div>
-            <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-white bg-opacity-10 rounded-lg">
-              <p className="text-xs sm:text-sm font-medium opacity-95">
-                💡 {daysInfo.message}
-              </p>
+            <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className="p-1.5 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-1.5 sm:p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+              <button
+                onClick={onClose}
+                className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
             </div>
           </div>
 
-          {/* Task Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Task Name</label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editedTask.name}
-                onChange={(e) => setEditedTask({ ...editedTask, name: e.target.value })}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-              />
-            ) : (
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">{editedTask.name}</h3>
-            )}
-          </div>
+          {/* Content */}
+          <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
+            {/* Collaboration Status */}
+            {collaborationInfo && (
+              <div className="space-y-3">
+                {/* Assignment Status */}
+                {collaborationInfo.assignment && (
+                  <div className={`p-4 rounded-lg border ${
+                    collaborationInfo.assignment.status === 'accepted' 
+                      ? 'bg-green-50 border-green-200' 
+                      : collaborationInfo.assignment.status === 'pending'
+                      ? 'bg-yellow-50 border-yellow-200'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <div className="flex items-center space-x-2">
+                      <UserCheck className={`w-5 h-5 ${
+                        collaborationInfo.assignment.status === 'accepted' 
+                          ? 'text-green-600' 
+                          : 'text-yellow-600'
+                      }`} />
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {collaborationInfo.assignment.status === 'accepted' 
+                            ? 'Assigned to' 
+                            : 'Pending assignment to'} {collaborationInfo.assignment.assigned_to_name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {collaborationInfo.assignment.assigned_to_email}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            {isEditing ? (
-              <textarea
-                value={editedTask.description}
-                onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
-                rows={4}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base resize-none"
-              />
-            ) : (
-              <p className="text-gray-600 text-sm sm:text-base break-words">{editedTask.description || 'No description provided'}</p>
+                {/* Submission Status */}
+                {collaborationInfo.submission && (
+                  <div className={`p-4 rounded-lg border ${
+                    collaborationInfo.submission.status === 'approved' 
+                      ? 'bg-green-50 border-green-200' 
+                      : collaborationInfo.submission.status === 'submitted'
+                      ? 'bg-blue-50 border-blue-200'
+                      : collaborationInfo.submission.status === 'rejected'
+                      ? 'bg-red-50 border-red-200'
+                      : 'bg-yellow-50 border-yellow-200'
+                  }`}>
+                    <div className="flex items-center space-x-2">
+                      <Send className={`w-5 h-5 ${
+                        collaborationInfo.submission.status === 'approved' 
+                          ? 'text-green-600' 
+                          : collaborationInfo.submission.status === 'submitted'
+                          ? 'text-blue-600'
+                          : collaborationInfo.submission.status === 'rejected'
+                          ? 'text-red-600'
+                          : 'text-yellow-600'
+                      }`} />
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          Work {collaborationInfo.submission.status === 'approved' ? 'approved' : 
+                               collaborationInfo.submission.status === 'submitted' ? 'submitted for review' :
+                               collaborationInfo.submission.status === 'rejected' ? 'rejected' : 'pending review'}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          by {collaborationInfo.submission.submitter_name} on{' '}
+                          {new Date(collaborationInfo.submission.submitted_at).toLocaleDateString()}
+                        </p>
+                        {collaborationInfo.submission.submission_notes && (
+                          <p className="text-sm text-gray-600 mt-1 italic">
+                            "{collaborationInfo.submission.submission_notes}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
 
-          {/* Project */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
-            {isEditing ? (
-              <select
-                value={editedTask.projectId}
-                onChange={(e) => setEditedTask({ ...editedTask, projectId: e.target.value })}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-              >
-                {projects.filter(project => !project.archived).map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <span className="text-gray-900 text-sm sm:text-base">{getProjectName(editedTask.projectId)}</span>
-            )}
-          </div>
+            {/* Days Remaining Section - At Top */}
+            <div className={`p-4 sm:p-6 rounded-xl ${daysInfo.bgColor} ${daysInfo.textColor}`}>
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <IconComponent className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xl sm:text-2xl font-bold">{daysInfo.label}</div>
+                  <div className="text-xs sm:text-sm opacity-90">
+                    {editedTask.dueDate && new Date(editedTask.dueDate).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-3 sm:mt-4 p-2.5 sm:p-3 bg-white bg-opacity-10 rounded-lg">
+                <p className="text-xs sm:text-sm font-medium opacity-95">
+                  💡 {daysInfo.message}
+                </p>
+              </div>
+            </div>
 
-          {/* Task Details Grid - Responsive */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            {/* Assignee */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                <User className="w-4 h-4 inline mr-1" />
-                Assignee
+            {/* Task Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Task Name</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedTask.name}
+                  onChange={(e) => setEditedTask({ ...editedTask, name: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                />
+              ) : (
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">{editedTask.name}</h3>
+              )}
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+              {isEditing ? (
+                <textarea
+                  value={editedTask.description}
+                  onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
+                  rows={4}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base resize-none"
+                />
+              ) : (
+                <p className="text-gray-600 text-sm sm:text-base break-words">{editedTask.description || 'No description provided'}</p>
+              )}
+            </div>
+
+            {/* Project */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Project</label>
+              {isEditing ? (
+                <select
+                  value={editedTask.projectId}
+                  onChange={(e) => setEditedTask({ ...editedTask, projectId: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                >
+                  {projects.filter(project => !project.archived).map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-gray-900 text-sm sm:text-base">{getProjectName(editedTask.projectId)}</span>
+              )}
+            </div>
+
+            {/* Task Details Grid - Responsive */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+              {/* Assignee */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  <User className="w-4 h-4 inline mr-1" />
+                  Assignee
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedTask.assignee}
+                    onChange={(e) => setEditedTask({ ...editedTask, assignee: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                  />
+                ) : (
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${editedTask.avatarColor} flex-shrink-0`}>
+                      {editedTask.avatar}
+                    </div>
+                    <span className="ml-3 text-gray-900 text-sm sm:text-base truncate">{editedTask.assignee}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Status */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">Status</label>
+                {isEditing ? (
+                  <select
+                    value={editedTask.status}
+                    onChange={(e) => updateStatus(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.value}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium ${editedTask.statusColor}`}>
+                    {editedTask.status}
+                  </span>
+                )}
+              </div>
+
+              {/* Priority */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  <Flag className="w-4 h-4 inline mr-1" />
+                  Priority
+                </label>
+                {isEditing ? (
+                  <select
+                    value={editedTask.priority}
+                    onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                  >
+                    {priorityOptions.map((priority) => (
+                      <option key={priority} value={priority}>
+                        {priority}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium ${
+                    editedTask.priority === 'High' || editedTask.priority === 'Critical' ? 'bg-red-100 text-red-800' :
+                    editedTask.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {editedTask.priority}
+                  </span>
+                )}
+              </div>
+
+              {/* Due Date */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  <Calendar className="w-4 h-4 inline mr-1" />
+                  Due Date
+                </label>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={editedTask.dueDate}
+                    onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })}
+                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                  />
+                ) : (
+                  <span className="text-gray-900 text-sm sm:text-base">
+                    {editedTask.dueDate ? new Date(editedTask.dueDate).toLocaleDateString() : 'No due date'}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Tags */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                <Tag className="w-4 h-4 inline mr-1" />
+                Tags
               </label>
               {isEditing ? (
                 <input
                   type="text"
-                  value={editedTask.assignee}
-                  onChange={(e) => setEditedTask({ ...editedTask, assignee: e.target.value })}
+                  value={editedTask.tags?.join(', ') || ''}
+                  onChange={(e) => setEditedTask({ ...editedTask, tags: e.target.value.split(', ').filter(tag => tag.trim()) })}
+                  placeholder="Enter tags separated by commas"
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
                 />
               ) : (
-                <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${editedTask.avatarColor} flex-shrink-0`}>
-                    {editedTask.avatar}
-                  </div>
-                  <span className="ml-3 text-gray-900 text-sm sm:text-base truncate">{editedTask.assignee}</span>
+                <div className="flex flex-wrap gap-2">
+                  {editedTask.tags?.length > 0 ? (
+                    editedTask.tags.map((tag: string, index: number) => (
+                      <span key={index} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {tag}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-gray-500 text-sm">No tags added</span>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Status */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">Status</label>
-              {isEditing ? (
-                <select
-                  value={editedTask.status}
-                  onChange={(e) => updateStatus(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.value}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium ${editedTask.statusColor}`}>
-                  {editedTask.status}
-                </span>
-              )}
-            </div>
+            {/* Collaboration Actions */}
+            {!isEditing && (
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+                {/* Assign Task Button (for project owners) */}
+                {isProjectOwner() && !isTaskAssigned() && (
+                  <button
+                    onClick={() => setShowAssignModal(true)}
+                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <UserCheck className="w-4 h-4" />
+                    <span>Assign Task</span>
+                  </button>
+                )}
 
-            {/* Priority */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                <Flag className="w-4 h-4 inline mr-1" />
-                Priority
-              </label>
-              {isEditing ? (
-                <select
-                  value={editedTask.priority}
-                  onChange={(e) => setEditedTask({ ...editedTask, priority: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-                >
-                  {priorityOptions.map((priority) => (
-                    <option key={priority} value={priority}>
-                      {priority}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                  editedTask.priority === 'High' || editedTask.priority === 'Critical' ? 'bg-red-100 text-red-800' :
-                  editedTask.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-gray-100 text-gray-800'
-                }`}>
-                  {editedTask.priority}
-                </span>
-              )}
-            </div>
+                {/* Submit Work Button (for assignees) */}
+                {isTaskAssignee() && !hasPendingSubmission() && collaborationInfo?.submission?.status !== 'approved' && (
+                  <button
+                    onClick={() => setShowSubmissionModal(true)}
+                    className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <Send className="w-4 h-4" />
+                    <span>Submit Work</span>
+                  </button>
+                )}
 
-            {/* Due Date */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                <Calendar className="w-4 h-4 inline mr-1" />
-                Due Date
-              </label>
-              {isEditing ? (
-                <input
-                  type="date"
-                  value={editedTask.dueDate}
-                  onChange={(e) => setEditedTask({ ...editedTask, dueDate: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-                />
-              ) : (
-                <span className="text-gray-900 text-sm sm:text-base">
-                  {editedTask.dueDate ? new Date(editedTask.dueDate).toLocaleDateString() : 'No due date'}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Tag className="w-4 h-4 inline mr-1" />
-              Tags
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editedTask.tags?.join(', ') || ''}
-                onChange={(e) => setEditedTask({ ...editedTask, tags: e.target.value.split(', ').filter(tag => tag.trim()) })}
-                placeholder="Enter tags separated by commas"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-              />
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {editedTask.tags?.length > 0 ? (
-                  editedTask.tags.map((tag: string, index: number) => (
-                    <span key={index} className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {tag}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-gray-500 text-sm">No tags added</span>
+                {/* Task Status Indicators */}
+                {isTaskAssigned() && (
+                  <div className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-lg">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Assigned to team member</span>
+                  </div>
                 )}
               </div>
             )}
           </div>
-        </div>
 
-        {/* Footer - Sticky for mobile */}
-        {isEditing && (
-          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 sm:p-6 rounded-b-xl">
-            <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-              <button
-                onClick={() => setIsEditing(false)}
-                className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Save Changes
-              </button>
+          {/* Footer - Sticky for mobile */}
+          {isEditing && (
+            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3 sm:p-6 rounded-b-xl">
+              <div className="flex flex-col sm:flex-row items-center justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="w-full sm:w-auto px-4 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Assignment Modal */}
+      {showAssignModal && (
+        <AssignTaskModal
+          isOpen={showAssignModal}
+          onClose={() => setShowAssignModal(false)}
+          task={task}
+          project={getProject(task.projectId)}
+          onTaskAssigned={handleTaskAssigned}
+        />
+      )}
+
+      {/* Submission Modal */}
+      {showSubmissionModal && (
+        <TaskSubmissionModal
+          isOpen={showSubmissionModal}
+          onClose={() => setShowSubmissionModal(false)}
+          task={task}
+          onTaskSubmitted={handleTaskSubmitted}
+        />
+      )}
+    </>
   );
 };
 

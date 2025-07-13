@@ -24,7 +24,8 @@ const Dashboard = () => {
     updateProject,
     addTask,
     updateTask,
-    deleteTask
+    deleteTask,
+    refreshData // Add refreshData to the destructured values
   } = useSupabaseData();
 
   const handleAddProject = async (newProject: any) => {
@@ -36,6 +37,8 @@ const Dashboard = () => {
         dotColor: newProject.dotColor,
         archived: false
       });
+      // Refresh data to ensure project membership is properly loaded
+      await refreshData();
     } catch (error) {
       console.error('Error adding project:', error);
     }
@@ -293,6 +296,7 @@ const Dashboard = () => {
             setActiveView('My Task');
           }}
           onViewChange={setActiveView}
+          onRefreshData={refreshData}
         />
         {renderContent()}
       </div>
